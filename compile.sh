@@ -5,8 +5,8 @@ javac @sources.txt -d build
 rm sources.txt
 echo "Compiling done."
 echo "Running bit tool"
-javac BitTool.java 
-java BitTool build/pt/ulisboa/tecnico/cnv/solver build/pt/ulisboa/tecnico/cnv/solver/
+javac BitTool.java -d build 
+java -cp build BitTool build/pt/ulisboa/tecnico/cnv/solver build/pt/ulisboa/tecnico/cnv/solver/
 echo "Finished."
 
 
