@@ -48,6 +48,8 @@ public class SolverArgumentParser extends AbstractArgumentParser {
 
         // Process input image argument.
         final String inputImgPath = cmd.getOptionValue(SolverParameters.INPUT_IMG.toString());
+        System.err.println("Current dir:" + System.getProperty("user.dir"));
+        System.out.flush();
         final File file = new File(inputImgPath);
         if (! file.exists())
             throw new IllegalArgumentException(SolverParameters.INPUT_IMG.toString() + " does not exist: " + inputImgPath);

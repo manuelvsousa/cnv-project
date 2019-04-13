@@ -26,7 +26,8 @@ import javax.imageio.ImageIO;
 public class WebServer {
 
 	public static void main(final String[] args) throws Exception {
-		final HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
+		final HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 8000), 0);
+		//final HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
 		server.createContext("/climb", new MyHandler());
 
 		// be aware! infinite pool of threads!
@@ -39,7 +40,6 @@ public class WebServer {
 	static class MyHandler implements HttpHandler {
 		@Override
 		public void handle(final HttpExchange t) throws IOException {
-
 			// Get the query.
 			final String query = t.getRequestURI().getQuery();
 
@@ -93,6 +93,8 @@ public class WebServer {
 			}
 
 			System.out.println("> Finished parsing args.");
+
+
 
 			// Create solver instance from factory.
 			final Solver s = SolverFactory.getInstance().makeSolver(ap);
