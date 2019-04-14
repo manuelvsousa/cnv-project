@@ -40,19 +40,12 @@ public class WebServer {
 	static class MyHandler implements HttpHandler {
 		@Override
 		public void handle(final HttpExchange t) throws IOException {
+			long searchRectangleSize = 0;
 			// Get the query.
 			final String query = t.getRequestURI().getQuery();
-
 			System.out.println("> Query:\t" + query);
-
 			// Break it down into String[].
 			final String[] params = query.split("&");
-
-			/*
-			for(String p: params) {
-				System.out.println(p);
-			}
-			*/
 
 			// Store as if it was a direct call to SolverMain.
 			final ArrayList<String> newArgs = new ArrayList<>();
@@ -60,13 +53,7 @@ public class WebServer {
 				final String[] splitParam = p.split("=");
 				newArgs.add("-" + splitParam[0]);
 				newArgs.add(splitParam[1]);
-
-				/*
-				System.out.println("splitParam[0]: " + splitParam[0]);
-				System.out.println("splitParam[1]: " + splitParam[1]);
-				*/
 			}
-
 			newArgs.add("-d");
 
 			// Store from ArrayList into regular String[].
@@ -77,24 +64,18 @@ public class WebServer {
 				i++;
 			}
 
-			/*
-			for(String ar : args) {
-				System.out.println("ar: " + ar);
-			} */
-
 			SolverArgumentParser ap = null;
 			try {
 				// Get user-provided flags.
 				ap = new SolverArgumentParser(args);
-			}
-			catch(Exception e) {
+			}catch(Exception e) {
 				System.out.println(e);
 				return;
 			}
-
 			System.out.println("> Finished parsing args.");
-
-
+			// calculate search rectangle size
+			searchRectangleSize = (ap.getY1() - ap.getStartY()) * (ap.getX1()-ap.getStartX());
+			System.out.println("> Search rectangle size: " + searchRectangleSize);
 
 			// Create solver instance from factory.
 			final Solver s = SolverFactory.getInstance().makeSolver(ap);
@@ -102,22 +83,15 @@ public class WebServer {
 			// Write figure file to disk.
 			File responseFile = null;
 			try {
-
 				final BufferedImage outputImg = s.solveImage();
-
 				final String outPath = ap.getOutputDirectory();
-
 				final String imageName = s.toString();
-
 				if(ap.isDebugging()) {
 					System.out.println("> Image name: " + imageName);
 				}
-
 				final Path imagePathPNG = Paths.get(outPath, imageName);
 				ImageIO.write(outputImg, "png", imagePathPNG.toFile());
-
 				responseFile = imagePathPNG.toFile();
-
 			} catch (final FileNotFoundException e) {
 				e.printStackTrace();
 			} catch (final IOException e) {
@@ -126,23 +100,16 @@ public class WebServer {
 				e.printStackTrace();
 			}
 
-
-
 			// Send response to browser.
 			final Headers hdrs = t.getResponseHeaders();
-
 			t.sendResponseHeaders(200, responseFile.length());
-
 			hdrs.add("Content-Type", "image/png");
-
 			hdrs.add("Access-Control-Allow-Origin", "*");
 			hdrs.add("Access-Control-Allow-Credentials", "true");
 			hdrs.add("Access-Control-Allow-Methods", "POST, GET, HEAD, OPTIONS");
 			hdrs.add("Access-Control-Allow-Headers", "Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
-
 			final OutputStream os = t.getResponseBody();
 			Files.copy(responseFile.toPath(), os);
-
 
 			os.close();
 

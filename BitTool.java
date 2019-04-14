@@ -8,7 +8,7 @@ import java.util.*;
   */
 public class BitTool {
     private static PrintStream out = null;
-    private static long i_count = 0, b_count = 0, m_count = 0;
+    private static long i_count = 0, load_count = 0, store_count = 0;
 
     /* main reads in all the files class files present in the input directory,
      * instruments them, and outputs them to the specified output directory.
@@ -34,6 +34,18 @@ public class BitTool {
                         routine.addAfter("BitTool", "resetCount", ci.getClassName());
                     }
                     
+                    // Count load/stores in each routine
+                    Instruction[] routineInstructions = routine.getInstructions();
+                    for(Instruction instr : routineInstructions){
+                        int opcode = instr.getOpcode();
+                        short instr_type = InstructionTable.InstructionTypeTable[opcode];
+                        if (instr_type == InstructionTable.LOAD_INSTRUCTION) {
+                            instr.addBefore("BitTool", "incLoadStore", new Integer(0));
+                        }else if (instr_type == InstructionTable.STORE_INSTRUCTION) {
+                            instr.addBefore("BitTool", "incLoadStore", new Integer(1));
+                        }
+                    }    
+
                     for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
                         BasicBlock bb = (BasicBlock) b.nextElement();
                         bb.addBefore("BitTool", "count", new Integer(bb.size()));
@@ -47,7 +59,9 @@ public class BitTool {
     public static synchronized void writeBitToolOutputToFile(String className) {
         try{
             PrintWriter writer = new PrintWriter("bitToolOutput.txt", "UTF-8");
-            writer.println("# instructions: " + i_count + "\n");
+            writer.println("Instruction total: " + i_count);
+            writer.println("Load instructions: " + load_count);
+            writer.println("Store instructions: " + store_count);
             writer.close();
         }catch(Exception e){
             e.printStackTrace();
@@ -56,12 +70,18 @@ public class BitTool {
     
     public static synchronized void count(int incr) {
         i_count += incr;
-        b_count++;
+    }
+
+    public static synchronized void incLoadStore(int type){
+        if(type == 0){
+            load_count++;
+        }else if(type == 1){
+            store_count++;
+        }
     }
 
     public static synchronized void resetCount(String className) {
         i_count=0;
-        b_count=0;
     }
 }
 
