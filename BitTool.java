@@ -1,13 +1,21 @@
-
 import BIT.highBIT.*;
 import java.io.*;
 import java.util.*;
 
- /**
-  * BitTool based on the ICount BIT tool
-  */
+
 public class BitTool {
-    private static HashMap<Long, RequestMetricData> metricData = new HashMap<>();
+    /**
+     * Object[] -> metric data
+     * 0: long instructionCount
+     * 1: long loadInstructionCount;
+     * 2: long storeInstructionCount;
+     * 3: long allocInstructionCount;
+     */
+    
+    // TODO missing request metric data
+
+    // mapping between thread id and metric data Object[]
+    private static HashMap<Long, Object[]> metricData = new HashMap<>();
     private static PrintStream out = null;
     private static long i_count = 0, load_count = 0, store_count = 0;
     private static long allocBytes_count = 0, alloc_count = 0;
@@ -41,7 +49,7 @@ public class BitTool {
                     }
                     
                     // LOAD, STORE, ALLOC instruction metrics
-                    addInstructionMetricsToRoutine(routine, ci);
+                    //addInstructionMetricsToRoutine(routine, ci);
                     
                     // Instruction count metric
                     addInstructionCountMetricToRoutine(routine);
@@ -71,24 +79,32 @@ public class BitTool {
     }
 
 
-    // Adds LOAD, STORE, ALLOC metric calls to the end of the routine
+    // Adds LOAD, STORE, ALLOC metric calls to the end of the routine's basic blocks
     public static void addInstructionMetricsToRoutine(Routine routine, ClassInfo ci){
         int loads = 0, stores = 0, allocs = 0;
 
-        Instruction[] instructions = routine.getInstructions();
-        for(Instruction instr : instructions){
-            if(isLoadInstruction(instr)){
-                loads++;
-            }else if(isStoreInstruction(instr)){
-                stores++;
-            }else if(isAllocInstruction(instr)){
-                allocs++;
+        for(Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements();){
+            Instruction[] routineInstructions = routine.getInstructions();
+            BasicBlock bb = (BasicBlock) b.nextElement();
+            
+            for( int i = bb.getStartAddress(); i < bb.getEndAddress(); i++){
+                Instruction instr = routineInstructions[i];
+                if(isLoadInstruction(instr)){
+                    loads++;
+                }else if(isStoreInstruction(instr)){
+                    stores++;
+                }else if(isAllocInstruction(instr)){
+                    allocs++;
+                }
             }
+           
+            bb.addBefore("BitTool", "incLoad", loads);    
+            bb.addBefore("BitTool", "incStore", stores);  
+            bb.addBefore("BitTool", "incAlloc", allocs);  
+            loads = 0;
+            stores = 0;
+            allocs = 0;
         }
-        // after routine is finished, update load store and alloc instruction counters
-        routine.addAfter("BitTool", "incLoad", loads);    
-        routine.addAfter("BitTool", "incStore", stores);  
-        routine.addAfter("BitTool", "incAlloc", allocs);  
     }
 
     // add instruction count metric call to a routine
@@ -125,15 +141,14 @@ public class BitTool {
         return InstructionTable.InstructionTypeTable[opcode] == InstructionTable.STORE_INSTRUCTION;
     }
 
-    
-    
     //////////////// Added methods to bytecode ///////////
 
     
     // initialize request metric data entry in hashmap 
     public static synchronized void initRequestMetricDataEntry(String className){
         // TODO query data
-        metricData.put(Thread.currentThread().getId(), new RequestMetricData("",""));
+        Long[] emptyMetrics = {new Long(0),new Long(0),new Long(0),new Long(0)};
+        metricData.put(Thread.currentThread().getId(), emptyMetrics );
     }
     
     // remove request metric data entry from hashmap 
@@ -143,12 +158,13 @@ public class BitTool {
 
 
     public static synchronized void writeBitToolOutputToFile(String className) {
-        RequestMetricData reqMetricData = metricData.get(Thread.currentThread().getId());
+        Object[] metrics = metricData.get(Thread.currentThread().getId());
         try{
             PrintWriter writer = new PrintWriter("bitToolOutput.txt", "UTF-8");
-            writer.println("Instruction total: " + reqMetricData.instructionCount);
-            writer.println("Load instructions: " + reqMetricData.loadInstructionCount);
-            writer.println("Store instructions: " + reqMetricData.storeInstructionCount);
+            writer.println("Instruction total: " + metrics[0]);
+            writer.println("Load instructions: " + metrics[1]);
+            writer.println("Store instructions: " + metrics[2]);
+            writer.println("Alloc instructions: " + metrics[3]);
             writer.close();
         }catch(Exception e){
             e.printStackTrace();
@@ -156,65 +172,40 @@ public class BitTool {
     }
 
     public static synchronized void count(int incr) {
-        RequestMetricData requestMetricData = metricData.get(Thread.currentThread().getId());
+        Object[] metrics = metricData.get(Thread.currentThread().getId());
         
         // inevitable null guard due to instrumentation bytecode being inserted at compile time
-        if(requestMetricData != null){
-            requestMetricData.instructionCount+=incr;
+        if(metrics != null){
+            metrics[0] = incr + (Long) metrics[0];
         }
     }
 
     public static synchronized void incLoad(int incr){
-        RequestMetricData requestMetricData = metricData.get(Thread.currentThread().getId());
+        Object[] metrics = metricData.get(Thread.currentThread().getId());
 
         // inevitable null guard due to instrumentation bytecode being inserted at compile time
-        if(requestMetricData != null){
-            requestMetricData.loadInstructionCount+=incr;
+        if(metrics != null){
+            metrics[1] = incr + (Long) metrics[1];
         }
     }
 
     public static synchronized void incStore(int incr){
-        RequestMetricData requestMetricData = metricData.get(Thread.currentThread().getId());
+        Object[] metrics = metricData.get(Thread.currentThread().getId());
 
         // inevitable null guard due to instrumentation bytecode being inserted at compile time
-        if(requestMetricData != null){
-            requestMetricData.storeInstructionCount+=incr;
+        if(metrics != null){
+            metrics[2] = incr + (Long) metrics[2];
         }
     }
 
 
     public static synchronized void incAlloc(int incr){
-        RequestMetricData requestMetricData = metricData.get(Thread.currentThread().getId());
+        Object[] metrics = metricData.get(Thread.currentThread().getId());
 
         // inevitable null guard due to instrumentation bytecode being inserted at compile time
-        if(requestMetricData != null){
-            requestMetricData.allocInstructionCount+=incr;
+        if(metrics != null){
+            metrics[3] = incr + (Long) metrics[3];
         }
     }
 }
 
-// TODO change to object array for efficiency
-class RequestMetricData{
-        public String query; // responsible for carrying out the request processing
-        public String searchAlgorithm;
-        public long dataSetSize;
-        public long searchRectSize;
-        public long instructionCount;
-        public long loadInstructionCount;
-        public long storeInstructionCount;
-        public long allocInstructionCount;
-        public long allocByteCount;
-
-        public RequestMetricData(String query, String searchAlgorithm){
-            this.query = query;
-            this.searchAlgorithm = searchAlgorithm;
-            this.dataSetSize = 0;
-            this.searchRectSize = 0;
-            this.instructionCount = 0;
-            this.loadInstructionCount = 0;
-            this.storeInstructionCount = 0;
-            this.allocInstructionCount = 0;
-            this.allocByteCount = 0;
-        }
-
-    }
