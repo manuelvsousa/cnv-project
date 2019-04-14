@@ -15,8 +15,6 @@ public class BitTool {
     // TODO missing request metric data
     private static HashMap<Long, Long[]> metricData = new HashMap<>();
     private static PrintStream out = null;
-    private static long i_count = 0, load_count = 0, store_count = 0;
-    private static long allocBytes_count = 0, alloc_count = 0;
 
     private static int[] allocInstrOpcodes = {InstructionTable.NEW, InstructionTable.newarray 
                                 , InstructionTable.anewarray, InstructionTable.multianewarray};
@@ -50,7 +48,7 @@ public class BitTool {
                     addInstructionMetricsToRoutine(routine, ci);
                     
                     // Instruction count metric
-                    addInstructionCountMetricToRoutine(routine);
+                        addInstructionCountMetricToRoutine(routine);
                 }
                 ci.write(argv[1] + System.getProperty("file.separator") + infilename);
             }
