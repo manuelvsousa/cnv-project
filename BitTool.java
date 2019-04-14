@@ -11,6 +11,9 @@ public class BitTool {
     private static long i_count = 0, load_count = 0, store_count = 0;
     private static long allocBytes_count = 0, alloc_count = 0;
 
+    private static int[] allocInstrOpcodes = {InstructionTable.NEW, InstructionTable.newarray 
+                                , InstructionTable.anewarray, InstructionTable.multianewarray};
+
     /* main reads in all the files class files present in the input directory,
      * instruments them, and outputs them to the specified output directory.
      */
@@ -26,44 +29,82 @@ public class BitTool {
 				
                 for (Enumeration e = ci.getRoutines().elements(); e.hasMoreElements(); ) {
                     Routine routine = (Routine) e.nextElement();
-                    if(routine.getMethodName().equals("solveImage")){
-                        // after solveImage() finishes write results to a file 
-                        // and reset counter for the next request
-                        // TODO measure only one thread, and not all if there is
-                        // more than 1 request running at the same time, ruining the result
-                        routine.addAfter("BitTool", "writeBitToolOutputToFile", ci.getClassName());
-                        routine.addAfter("BitTool", "resetCount", ci.getClassName());
+                    
+                    // Add write output method call when image solving is finished
+                    if(isSolveImageRoutine(routine)){
+                        addMetricOutputOnSolveImageCall(routine, ci);
                     }
                     
-                    // Count load/stores and allocs in each routine
-                    Instruction[] routineInstructions = routine.getInstructions();
-                    for(Instruction instr : routineInstructions){
-                        int opcode = instr.getOpcode();
-                        // load and stores
-                        short instr_type = InstructionTable.InstructionTypeTable[opcode];
-                        if (instr_type == InstructionTable.LOAD_INSTRUCTION) {
-                            instr.addBefore("BitTool", "incLoadStore", new Integer(0));
-                        }else if (instr_type == InstructionTable.STORE_INSTRUCTION) {
-                            instr.addBefore("BitTool", "incLoadStore", new Integer(1));
-                        }
-                        // allocs
-                        if ((opcode==InstructionTable.NEW) ||
-                            (opcode==InstructionTable.newarray) ||
-                            (opcode==InstructionTable.anewarray) ||
-                            (opcode==InstructionTable.multianewarray)) {
-                            instr.addBefore("BitTool", "incAlloc", instr);
-                        }
-                    }    
-
-                    for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
-                        BasicBlock bb = (BasicBlock) b.nextElement();
-                        bb.addBefore("BitTool", "count", new Integer(bb.size()));
-                    }
+                    // LOAD, STORE, ALLOC instruction metrics
+                    addInstructionMetricsToRoutine(routine, ci);
+                    
+                    // Instruction count metric
+                    addInstructionCountMetricToRoutine(routine);
                 }
                 ci.write(argv[1] + System.getProperty("file.separator") + infilename);
             }
         }
     }
+
+    ////////// Add metric call methods /////////////////
+  
+    public static void addMetricOutputOnSolveImageCall(Routine routine, ClassInfo ci){
+        routine.addAfter("BitTool", "writeBitToolOutputToFile", ci.getClassName());
+        routine.addAfter("BitTool", "resetCount", ci.getClassName());
+    }
+
+
+    // Adds LOAD, STORE, ALLOC metric calls to a routine
+    public static void addInstructionMetricsToRoutine(Routine routine, ClassInfo ci){
+        Instruction[] instructions = routine.getInstructions();
+        for(Instruction instr : instructions){
+            if(isLoadInstruction(instr)){
+                instr.addBefore("BitTool", "incLoadStore", new Integer(0));
+            }else if(isStoreInstruction(instr)){
+                instr.addBefore("BitTool", "incLoadStore", new Integer(1));
+            }else if(isAllocInstruction(instr)){
+                instr.addBefore("BitTool", "incAlloc", ci.getClassName());
+            }
+        }    
+    }
+
+    // add instruction count metric call to a routine
+    public static void addInstructionCountMetricToRoutine(Routine routine){
+        for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
+            BasicBlock bb = (BasicBlock) b.nextElement();
+            bb.addBefore("BitTool", "count", new Integer(bb.size()));
+        }
+    }
+
+    /////////////////////////////////////////////
+    
+    private static boolean isSolveImageRoutine(Routine routine){
+        return routine.getMethodName().equals("solveImage");
+    }
+
+    private static boolean isAllocInstruction(Instruction instruction){
+        int opcode = instruction.getOpcode();
+        for(int i = 0; i < allocInstrOpcodes.length; i++){
+            if(opcode == allocInstrOpcodes[i]){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isLoadInstruction(Instruction instruction){
+        int opcode = instruction.getOpcode();
+        return InstructionTable.InstructionTypeTable[opcode] == InstructionTable.LOAD_INSTRUCTION;
+    }
+
+    private static boolean isStoreInstruction(Instruction instruction){
+        int opcode = instruction.getOpcode();
+        return InstructionTable.InstructionTypeTable[opcode] == InstructionTable.STORE_INSTRUCTION;
+    }
+
+    
+    
+    //////////////// Added methods to bytecode ///////////
     
     public static synchronized void writeBitToolOutputToFile(String className) {
         try{
@@ -76,7 +117,7 @@ public class BitTool {
             e.printStackTrace();
         }
     }
-    
+
     public static synchronized void count(int incr) {
         i_count += incr;
     }
@@ -89,7 +130,7 @@ public class BitTool {
         }
     }
 
-    public static synchronized void incAlloc(Instruction instruction){
+    public static synchronized void incAlloc(String className){
         alloc_count++;
         // TODO get length operand * size of type for total # bytes allocated
     }
@@ -97,5 +138,6 @@ public class BitTool {
     public static synchronized void resetCount(String className) {
         i_count=0;
     }
+    //////////////////////////////////////////////////
 }
 
