@@ -115,6 +115,17 @@ public class WebServer {
 
 			System.out.println("> Sent response to " + t.getRemoteAddress().toString());
 		}
+
+		public void storeMetricsInDynamoDB(){
+			// each record :
+			// search algorithm
+			// dataset size
+			// search rectangle size
+			// total number of instructions
+			// total number of load instructions
+			// total number of store instructions
+			// total number of bytes allocated
+		}
 	}
 
 }

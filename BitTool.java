@@ -9,6 +9,7 @@ import java.util.*;
 public class BitTool {
     private static PrintStream out = null;
     private static long i_count = 0, load_count = 0, store_count = 0;
+    private static long allocBytes_count = 0, alloc_count = 0;
 
     /* main reads in all the files class files present in the input directory,
      * instruments them, and outputs them to the specified output directory.
@@ -34,15 +35,23 @@ public class BitTool {
                         routine.addAfter("BitTool", "resetCount", ci.getClassName());
                     }
                     
-                    // Count load/stores in each routine
+                    // Count load/stores and allocs in each routine
                     Instruction[] routineInstructions = routine.getInstructions();
                     for(Instruction instr : routineInstructions){
                         int opcode = instr.getOpcode();
+                        // load and stores
                         short instr_type = InstructionTable.InstructionTypeTable[opcode];
                         if (instr_type == InstructionTable.LOAD_INSTRUCTION) {
                             instr.addBefore("BitTool", "incLoadStore", new Integer(0));
                         }else if (instr_type == InstructionTable.STORE_INSTRUCTION) {
                             instr.addBefore("BitTool", "incLoadStore", new Integer(1));
+                        }
+                        // allocs
+                        if ((opcode==InstructionTable.NEW) ||
+                            (opcode==InstructionTable.newarray) ||
+                            (opcode==InstructionTable.anewarray) ||
+                            (opcode==InstructionTable.multianewarray)) {
+                            instr.addBefore("BitTool", "incAlloc", instr);
                         }
                     }    
 
@@ -78,6 +87,11 @@ public class BitTool {
         }else if(type == 1){
             store_count++;
         }
+    }
+
+    public static synchronized void incAlloc(Instruction instruction){
+        alloc_count++;
+        // TODO get length operand * size of type for total # bytes allocated
     }
 
     public static synchronized void resetCount(String className) {
