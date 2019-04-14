@@ -5,7 +5,7 @@ import java.util.*;
 
 public class BitTool {
     /**
-     * Object[] -> metric data
+     * Long[] -> metric data
      * 0: long instructionCount
      * 1: long loadInstructionCount;
      * 2: long storeInstructionCount;
@@ -13,9 +13,7 @@ public class BitTool {
      */
     
     // TODO missing request metric data
-
-    // mapping between thread id and metric data Object[]
-    private static HashMap<Long, Object[]> metricData = new HashMap<>();
+    private static HashMap<Long, Long[]> metricData = new HashMap<>();
     private static PrintStream out = null;
     private static long i_count = 0, load_count = 0, store_count = 0;
     private static long allocBytes_count = 0, alloc_count = 0;
@@ -49,7 +47,7 @@ public class BitTool {
                     }
                     
                     // LOAD, STORE, ALLOC instruction metrics
-                    //addInstructionMetricsToRoutine(routine, ci);
+                    addInstructionMetricsToRoutine(routine, ci);
                     
                     // Instruction count metric
                     addInstructionCountMetricToRoutine(routine);
@@ -188,7 +186,6 @@ public class BitTool {
             metrics[1] = incr + (Long) metrics[1];
         }
     }
-
     public static synchronized void incStore(int incr){
         Object[] metrics = metricData.get(Thread.currentThread().getId());
 
