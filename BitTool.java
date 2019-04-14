@@ -71,18 +71,24 @@ public class BitTool {
     }
 
 
-    // Adds LOAD, STORE, ALLOC metric calls to a routine
+    // Adds LOAD, STORE, ALLOC metric calls to the end of the routine
     public static void addInstructionMetricsToRoutine(Routine routine, ClassInfo ci){
+        int loads = 0, stores = 0, allocs = 0;
+
         Instruction[] instructions = routine.getInstructions();
         for(Instruction instr : instructions){
             if(isLoadInstruction(instr)){
-                instr.addBefore("BitTool", "incLoadStore", new Integer(0));
+                loads++;
             }else if(isStoreInstruction(instr)){
-                instr.addBefore("BitTool", "incLoadStore", new Integer(1));
+                stores++;
             }else if(isAllocInstruction(instr)){
-                instr.addBefore("BitTool", "incAlloc", ci.getClassName());
+                allocs++;
             }
-        }    
+        }
+        // after routine is finished, update load store and alloc instruction counters
+        routine.addAfter("BitTool", "incLoad", loads);    
+        routine.addAfter("BitTool", "incStore", stores);  
+        routine.addAfter("BitTool", "incAlloc", allocs);  
     }
 
     // add instruction count metric call to a routine
@@ -158,20 +164,24 @@ public class BitTool {
         }
     }
 
-    public static synchronized void incLoadStore(int type){
-        // TODO not instruction by instruction! every routine sum all and add 
+    public static synchronized void incLoad(int incr){
         RequestMetricData requestMetricData = metricData.get(Thread.currentThread().getId());
 
         // inevitable null guard due to instrumentation bytecode being inserted at compile time
         if(requestMetricData != null){
-            if(type == 0){
-                requestMetricData.loadInstructionCount++;
-            }else if(type == 1){
-                requestMetricData.storeInstructionCount++;
-            } 
+            requestMetricData.loadInstructionCount+=incr;
         }
-        
     }
+
+    public static synchronized void incStore(int incr){
+        RequestMetricData requestMetricData = metricData.get(Thread.currentThread().getId());
+
+        // inevitable null guard due to instrumentation bytecode being inserted at compile time
+        if(requestMetricData != null){
+            requestMetricData.storeInstructionCount+=incr;
+        }
+    }
+
 
     public static synchronized void incAlloc(int incr){
         RequestMetricData requestMetricData = metricData.get(Thread.currentThread().getId());
