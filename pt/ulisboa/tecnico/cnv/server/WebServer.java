@@ -40,6 +40,7 @@ public class WebServer {
 	static class MyHandler implements HttpHandler {
 		@Override
 		public void handle(final HttpExchange t) throws IOException {
+
 			long searchRectangleSize = 0;
 			// Get the query.
 			final String query = t.getRequestURI().getQuery();
@@ -114,6 +115,8 @@ public class WebServer {
 			os.close();
 
 			System.out.println("> Sent response to " + t.getRemoteAddress().toString());
+
+
 		}
 
 		public void storeMetricsInDynamoDB(){

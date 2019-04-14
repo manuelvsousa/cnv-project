@@ -7,6 +7,7 @@ import java.util.*;
   * BitTool based on the ICount BIT tool
   */
 public class BitTool {
+    private static HashMap<Long, RequestMetricData> metricData = new HashMap<>();
     private static PrintStream out = null;
     private static long i_count = 0, load_count = 0, store_count = 0;
     private static long allocBytes_count = 0, alloc_count = 0;
@@ -29,10 +30,14 @@ public class BitTool {
 				
                 for (Enumeration e = ci.getRoutines().elements(); e.hasMoreElements(); ) {
                     Routine routine = (Routine) e.nextElement();
-                    
+
                     // Add write output method call when image solving is finished
                     if(isSolveImageRoutine(routine)){
+                        // add output metrics method call first
                         addMetricOutputOnSolveImageCall(routine, ci);
+                        // add init and remove calls after
+                        addInitRequestMetricEntryCall(routine, ci);
+                        addRemoveRequestMetricCall(routine, ci);
                     }
                     
                     // LOAD, STORE, ALLOC instruction metrics
@@ -47,10 +52,22 @@ public class BitTool {
     }
 
     ////////// Add metric call methods /////////////////
+
+    // add instructions to initialize an entry of metric data in the hashmap according
+    // to the thread id, this is run once for every request
+    public static void addInitRequestMetricEntryCall(Routine routine, ClassInfo ci){
+        routine.addBefore("BitTool", "initRequestMetricDataEntry", ci.getClassName());
+    }
+
+    // add instructions to remove an entry of metric data from the hashmap according
+    // to the thread id, this is run once for every request
+    public static void addRemoveRequestMetricCall(Routine routine, ClassInfo ci){
+        routine.addAfter("BitTool", "removeRequestMetricDataEntry", ci.getClassName());
+    }
+
   
     public static void addMetricOutputOnSolveImageCall(Routine routine, ClassInfo ci){
         routine.addAfter("BitTool", "writeBitToolOutputToFile", ci.getClassName());
-        routine.addAfter("BitTool", "resetCount", ci.getClassName());
     }
 
 
@@ -105,13 +122,27 @@ public class BitTool {
     
     
     //////////////// Added methods to bytecode ///////////
+
     
+    // initialize request metric data entry in hashmap 
+    public static synchronized void initRequestMetricDataEntry(String className){
+        // TODO query data
+        metricData.put(Thread.currentThread().getId(), new RequestMetricData("",""));
+    }
+    
+    // remove request metric data entry from hashmap 
+    public static synchronized void removeRequestMetricDataEntry(String className){
+        metricData.remove(Thread.currentThread().getId());
+    }
+
+
     public static synchronized void writeBitToolOutputToFile(String className) {
+        RequestMetricData reqMetricData = metricData.get(Thread.currentThread().getId());
         try{
             PrintWriter writer = new PrintWriter("bitToolOutput.txt", "UTF-8");
-            writer.println("Instruction total: " + i_count);
-            writer.println("Load instructions: " + load_count);
-            writer.println("Store instructions: " + store_count);
+            writer.println("Instruction total: " + reqMetricData.instructionCount);
+            writer.println("Load instructions: " + reqMetricData.loadInstructionCount);
+            writer.println("Store instructions: " + reqMetricData.storeInstructionCount);
             writer.close();
         }catch(Exception e){
             e.printStackTrace();
@@ -119,25 +150,61 @@ public class BitTool {
     }
 
     public static synchronized void count(int incr) {
-        i_count += incr;
-    }
-
-    public static synchronized void incLoadStore(int type){
-        if(type == 0){
-            load_count++;
-        }else if(type == 1){
-            store_count++;
+        RequestMetricData requestMetricData = metricData.get(Thread.currentThread().getId());
+        
+        // inevitable null guard due to instrumentation bytecode being inserted at compile time
+        if(requestMetricData != null){
+            requestMetricData.instructionCount+=incr;
         }
     }
 
-    public static synchronized void incAlloc(String className){
-        alloc_count++;
-        // TODO get length operand * size of type for total # bytes allocated
+    public static synchronized void incLoadStore(int type){
+        // TODO not instruction by instruction! every routine sum all and add 
+        RequestMetricData requestMetricData = metricData.get(Thread.currentThread().getId());
+
+        // inevitable null guard due to instrumentation bytecode being inserted at compile time
+        if(requestMetricData != null){
+            if(type == 0){
+                requestMetricData.loadInstructionCount++;
+            }else if(type == 1){
+                requestMetricData.storeInstructionCount++;
+            } 
+        }
+        
     }
 
-    public static synchronized void resetCount(String className) {
-        i_count=0;
+    public static synchronized void incAlloc(int incr){
+        RequestMetricData requestMetricData = metricData.get(Thread.currentThread().getId());
+
+        // inevitable null guard due to instrumentation bytecode being inserted at compile time
+        if(requestMetricData != null){
+            requestMetricData.allocInstructionCount+=incr;
+        }
     }
-    //////////////////////////////////////////////////
 }
 
+// TODO change to object array for efficiency
+class RequestMetricData{
+        public String query; // responsible for carrying out the request processing
+        public String searchAlgorithm;
+        public long dataSetSize;
+        public long searchRectSize;
+        public long instructionCount;
+        public long loadInstructionCount;
+        public long storeInstructionCount;
+        public long allocInstructionCount;
+        public long allocByteCount;
+
+        public RequestMetricData(String query, String searchAlgorithm){
+            this.query = query;
+            this.searchAlgorithm = searchAlgorithm;
+            this.dataSetSize = 0;
+            this.searchRectSize = 0;
+            this.instructionCount = 0;
+            this.loadInstructionCount = 0;
+            this.storeInstructionCount = 0;
+            this.allocInstructionCount = 0;
+            this.allocByteCount = 0;
+        }
+
+    }
