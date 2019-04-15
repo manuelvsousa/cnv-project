@@ -4,20 +4,15 @@ import java.util.*;
 
 
 public class BitTool {
-   
-    /**
-     * Thread specific metric Data array
-     * long[] -> metric data
-     * 0: long instructionCount
-     * 1: long loadInstructionCount;
-     * 2: long storeInstructionCount;
-     * 3: long allocInstructionCount;
-     */
-    private static ThreadLocal<long[]> metricData = new ThreadLocal<long[]>() {
-        @Override public long[] initialValue(){
-            return new long[] {0,0,0,0};
+    private static ThreadLocal<Long> complexity = new ThreadLocal<Long>() {
+        @Override public Long initialValue(){
+            return new Long(0);
         }
     };
+
+    // instruction weights compared to single instruction to summarise complexity of all instructions in a single value
+    private static int LOAD_STORE_INST_WEIGHT = 50;
+    private static int ALLOC_INST_WEIGHT = 100;
 
     
     private static PrintStream out = null;
@@ -48,9 +43,6 @@ public class BitTool {
                     
                     // LOAD, STORE, ALLOC instruction metrics
                     addInstructionMetricsToRoutine(routine, ci);
-                    
-                    // Instruction count metric
-                    addInstructionCountMetricToRoutine(routine);
                 }
                 ci.write(argv[1] + System.getProperty("file.separator") + infilename);
             }
@@ -66,7 +58,7 @@ public class BitTool {
 
     // Adds LOAD, STORE, ALLOC metric calls to the end of the routine's basic blocks
     public static void addInstructionMetricsToRoutine(Routine routine, ClassInfo ci){
-        int loads = 0, stores = 0, allocs = 0;
+        int totalLoadStoreWeight = 0, totalAllocWeight = 0;
 
         for(Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements();){
             Instruction[] routineInstructions = routine.getInstructions();
@@ -74,21 +66,16 @@ public class BitTool {
             
             for( int i = bb.getStartAddress(); i < bb.getEndAddress(); i++){
                 Instruction instr = routineInstructions[i];
-                if(isLoadInstruction(instr)){
-                    loads++;
-                }else if(isStoreInstruction(instr)){
-                    stores++;
+                if(isLoadInstruction(instr) || isStoreInstruction(instr)){
+                    totalLoadStoreWeight += LOAD_STORE_INST_WEIGHT;
                 }else if(isAllocInstruction(instr)){
-                    allocs++;
+                    totalAllocWeight += ALLOC_INST_WEIGHT;
                 }
             }
-           
-            bb.addBefore("BitTool", "incLoad", loads);    
-            bb.addBefore("BitTool", "incStore", stores);  
-            bb.addBefore("BitTool", "incAlloc", allocs);  
-            loads = 0;
-            stores = 0;
-            allocs = 0;
+            
+            bb.addBefore("BitTool", "incComplexity", totalLoadStoreWeight + totalAllocWeight);
+            totalLoadStoreWeight = 0;
+            totalAllocWeight = 0;
         }
     }
 
@@ -133,16 +120,18 @@ public class BitTool {
     public static synchronized void writeBitToolOutputToFile(String className) {
         try{
             PrintWriter writer = new PrintWriter("bitToolOutput.txt", "UTF-8");
-            writer.println("Instruction total: " + metricData.get()[0]);
-            writer.println("Load instructions: " + metricData.get()[1]);
-            writer.println("Store instructions: " + metricData.get()[2]);
-            writer.println("Alloc instructions: " + metricData.get()[3]);
+            writer.println("Complexity: " + complexity.get());
             writer.close();
         }catch(Exception e){
             e.printStackTrace();
         }
     }
 
+    public static synchronized void incComplexity(int weight){
+        complexity.set(complexity.get() + weight);
+    }
+
+    /*
     public static synchronized void count(int incr) {
         metricData.get()[0] += incr;
     }
@@ -150,6 +139,7 @@ public class BitTool {
     public static synchronized void incLoad(int incr){
          metricData.get()[1] += incr;
     }
+
     public static synchronized void incStore(int incr){
          metricData.get()[2] += incr;
     }
@@ -157,5 +147,7 @@ public class BitTool {
     public static synchronized void incAlloc(int incr){
          metricData.get()[3] += incr;
     }
+    */
+
 }
 
