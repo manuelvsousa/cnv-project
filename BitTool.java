@@ -4,18 +4,23 @@ import java.util.*;
 
 
 public class BitTool {
+   
     /**
-     * Long[] -> metric data
+     * Thread specific metric Data array
+     * long[] -> metric data
      * 0: long instructionCount
      * 1: long loadInstructionCount;
      * 2: long storeInstructionCount;
      * 3: long allocInstructionCount;
      */
-    
-    // TODO missing request metric data
-    private static HashMap<Long, Long[]> metricData = new HashMap<>();
-    private static PrintStream out = null;
+    private static ThreadLocal<long[]> metricData = new ThreadLocal<long[]>() {
+        @Override public long[] initialValue(){
+            return new long[] {0,0,0,0};
+        }
+    };
 
+    
+    private static PrintStream out = null;
     private static int[] allocInstrOpcodes = {InstructionTable.NEW, InstructionTable.newarray 
                                 , InstructionTable.anewarray, InstructionTable.multianewarray};
 
@@ -39,16 +44,13 @@ public class BitTool {
                     if(isSolveImageRoutine(routine)){
                         // add output metrics method call first
                         addMetricOutputOnSolveImageCall(routine, ci);
-                        // add init and remove calls after
-                        addInitRequestMetricEntryCall(routine, ci);
-                        addRemoveRequestMetricCall(routine, ci);
                     }
                     
                     // LOAD, STORE, ALLOC instruction metrics
                     addInstructionMetricsToRoutine(routine, ci);
                     
                     // Instruction count metric
-                        addInstructionCountMetricToRoutine(routine);
+                    addInstructionCountMetricToRoutine(routine);
                 }
                 ci.write(argv[1] + System.getProperty("file.separator") + infilename);
             }
@@ -57,19 +59,6 @@ public class BitTool {
 
     ////////// Add metric call methods /////////////////
 
-    // add instructions to initialize an entry of metric data in the hashmap according
-    // to the thread id, this is run once for every request
-    public static void addInitRequestMetricEntryCall(Routine routine, ClassInfo ci){
-        routine.addBefore("BitTool", "initRequestMetricDataEntry", ci.getClassName());
-    }
-
-    // add instructions to remove an entry of metric data from the hashmap according
-    // to the thread id, this is run once for every request
-    public static void addRemoveRequestMetricCall(Routine routine, ClassInfo ci){
-        routine.addAfter("BitTool", "removeRequestMetricDataEntry", ci.getClassName());
-    }
-
-  
     public static void addMetricOutputOnSolveImageCall(Routine routine, ClassInfo ci){
         routine.addAfter("BitTool", "writeBitToolOutputToFile", ci.getClassName());
     }
@@ -140,27 +129,14 @@ public class BitTool {
     //////////////// Added methods to bytecode ///////////
 
     
-    // initialize request metric data entry in hashmap 
-    public static synchronized void initRequestMetricDataEntry(String className){
-        // TODO query data
-        Long[] emptyMetrics = {new Long(0),new Long(0),new Long(0),new Long(0)};
-        metricData.put(Thread.currentThread().getId(), emptyMetrics );
-    }
-    
-    // remove request metric data entry from hashmap 
-    public static synchronized void removeRequestMetricDataEntry(String className){
-        metricData.remove(Thread.currentThread().getId());
-    }
-
 
     public static synchronized void writeBitToolOutputToFile(String className) {
-        Object[] metrics = metricData.get(Thread.currentThread().getId());
         try{
             PrintWriter writer = new PrintWriter("bitToolOutput.txt", "UTF-8");
-            writer.println("Instruction total: " + metrics[0]);
-            writer.println("Load instructions: " + metrics[1]);
-            writer.println("Store instructions: " + metrics[2]);
-            writer.println("Alloc instructions: " + metrics[3]);
+            writer.println("Instruction total: " + metricData.get()[0]);
+            writer.println("Load instructions: " + metricData.get()[1]);
+            writer.println("Store instructions: " + metricData.get()[2]);
+            writer.println("Alloc instructions: " + metricData.get()[3]);
             writer.close();
         }catch(Exception e){
             e.printStackTrace();
@@ -168,39 +144,18 @@ public class BitTool {
     }
 
     public static synchronized void count(int incr) {
-        Object[] metrics = metricData.get(Thread.currentThread().getId());
-        
-        // inevitable null guard due to instrumentation bytecode being inserted at compile time
-        if(metrics != null){
-            metrics[0] = incr + (Long) metrics[0];
-        }
+        metricData.get()[0] += incr;
     }
 
     public static synchronized void incLoad(int incr){
-        Object[] metrics = metricData.get(Thread.currentThread().getId());
-
-        // inevitable null guard due to instrumentation bytecode being inserted at compile time
-        if(metrics != null){
-            metrics[1] = incr + (Long) metrics[1];
-        }
+         metricData.get()[1] += incr;
     }
     public static synchronized void incStore(int incr){
-        Object[] metrics = metricData.get(Thread.currentThread().getId());
-
-        // inevitable null guard due to instrumentation bytecode being inserted at compile time
-        if(metrics != null){
-            metrics[2] = incr + (Long) metrics[2];
-        }
+         metricData.get()[2] += incr;
     }
 
-
     public static synchronized void incAlloc(int incr){
-        Object[] metrics = metricData.get(Thread.currentThread().getId());
-
-        // inevitable null guard due to instrumentation bytecode being inserted at compile time
-        if(metrics != null){
-            metrics[3] = incr + (Long) metrics[3];
-        }
+         metricData.get()[3] += incr;
     }
 }
 
