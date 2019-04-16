@@ -17,7 +17,7 @@ public class BitTool {
     
     private static PrintStream out = null;
     private static int[] allocInstrOpcodes = {InstructionTable.NEW, InstructionTable.newarray 
-                                , InstructionTable.anewarray, InstructionTable.multianewarray};
+        , InstructionTable.anewarray, InstructionTable.multianewarray};
 
     /* main reads in all the files class files present in the input directory,
      * instruments them, and outputs them to the specified output directory.
@@ -25,13 +25,14 @@ public class BitTool {
     public static void main(String argv[]) {
         File file_in = new File(argv[0]);
         String infilenames[] = file_in.list();
-        
-        for (int i = 0; i < infilenames.length; i++) {
+
+        if(infilenames != null){
+         for (int i = 0; i < infilenames.length; i++) {
             String infilename = infilenames[i];
             if (infilename.endsWith(".class")) {
-				// create class info object
-				ClassInfo ci = new ClassInfo(argv[0] + System.getProperty("file.separator") + infilename);
-				
+                // create class info object
+                ClassInfo ci = new ClassInfo(argv[0] + System.getProperty("file.separator") + infilename);
+                
                 for (Enumeration e = ci.getRoutines().elements(); e.hasMoreElements(); ) {
                     Routine routine = (Routine) e.nextElement();
 
@@ -43,93 +44,99 @@ public class BitTool {
                     
                     // LOAD, STORE, ALLOC instruction metrics
                     addInstructionMetricsToRoutine(routine, ci);
+                    
+                    // Instruction count metric
+                    addInstructionCountMetricToRoutine(routine);
                 }
                 ci.write(argv[1] + System.getProperty("file.separator") + infilename);
             }
-        }
+        } 
     }
+
+    
+}
 
     ////////// Add metric call methods /////////////////
 
-    public static void addMetricOutputOnSolveImageCall(Routine routine, ClassInfo ci){
-        routine.addAfter("BitTool", "writeBitToolOutputToFile", ci.getClassName());
-    }
+public static void addMetricOutputOnSolveImageCall(Routine routine, ClassInfo ci){
+    routine.addAfter("BitTool", "writeBitToolOutputToFile", ci.getClassName());
+}
 
 
     // Adds LOAD, STORE, ALLOC metric calls to the end of the routine's basic blocks
-    public static void addInstructionMetricsToRoutine(Routine routine, ClassInfo ci){
-        int totalLoadStoreWeight = 0, totalAllocWeight = 0;
+public static void addInstructionMetricsToRoutine(Routine routine, ClassInfo ci){
+    int totalLoadStoreWeight = 0, totalAllocWeight = 0;
 
-        for(Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements();){
-            Instruction[] routineInstructions = routine.getInstructions();
-            BasicBlock bb = (BasicBlock) b.nextElement();
-            
-            for( int i = bb.getStartAddress(); i < bb.getEndAddress(); i++){
-                Instruction instr = routineInstructions[i];
-                if(isLoadInstruction(instr) || isStoreInstruction(instr)){
-                    totalLoadStoreWeight += LOAD_STORE_INST_WEIGHT;
-                }else if(isAllocInstruction(instr)){
-                    totalAllocWeight += ALLOC_INST_WEIGHT;
-                }
+    for(Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements();){
+        Instruction[] routineInstructions = routine.getInstructions();
+        BasicBlock bb = (BasicBlock) b.nextElement();
+        
+        for( int i = bb.getStartAddress(); i < bb.getEndAddress(); i++){
+            Instruction instr = routineInstructions[i];
+            if(isLoadInstruction(instr) || isStoreInstruction(instr)){
+                totalLoadStoreWeight += LOAD_STORE_INST_WEIGHT;
+            }else if(isAllocInstruction(instr)){
+                totalAllocWeight += ALLOC_INST_WEIGHT;
             }
-            
-            bb.addBefore("BitTool", "incComplexity", totalLoadStoreWeight + totalAllocWeight);
-            totalLoadStoreWeight = 0;
-            totalAllocWeight = 0;
         }
+        
+        bb.addBefore("BitTool", "incComplexity", totalLoadStoreWeight + totalAllocWeight);
+        totalLoadStoreWeight = 0;
+        totalAllocWeight = 0;
     }
+}
 
     // add instruction count metric call to a routine
-    public static void addInstructionCountMetricToRoutine(Routine routine){
-        for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
-            BasicBlock bb = (BasicBlock) b.nextElement();
-            bb.addBefore("BitTool", "count", new Integer(bb.size()));
-        }
+public static void addInstructionCountMetricToRoutine(Routine routine){
+    for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
+        BasicBlock bb = (BasicBlock) b.nextElement();
+        bb.addBefore("BitTool", "incComplexity", new Integer(bb.size()));
     }
+}
 
     /////////////////////////////////////////////
-    
-    private static boolean isSolveImageRoutine(Routine routine){
-        return routine.getMethodName().equals("solveImage");
-    }
 
-    private static boolean isAllocInstruction(Instruction instruction){
-        int opcode = instruction.getOpcode();
-        for(int i = 0; i < allocInstrOpcodes.length; i++){
-            if(opcode == allocInstrOpcodes[i]){
-                return true;
-            }
+private static boolean isSolveImageRoutine(Routine routine){
+    return routine.getMethodName().equals("solveImage");
+}
+
+private static boolean isAllocInstruction(Instruction instruction){
+    int opcode = instruction.getOpcode();
+    for(int i = 0; i < allocInstrOpcodes.length; i++){
+        if(opcode == allocInstrOpcodes[i]){
+            return true;
         }
-        return false;
     }
+    return false;
+}
 
-    private static boolean isLoadInstruction(Instruction instruction){
-        int opcode = instruction.getOpcode();
-        return InstructionTable.InstructionTypeTable[opcode] == InstructionTable.LOAD_INSTRUCTION;
-    }
+private static boolean isLoadInstruction(Instruction instruction){
+    int opcode = instruction.getOpcode();
+    return InstructionTable.InstructionTypeTable[opcode] == InstructionTable.LOAD_INSTRUCTION;
+}
 
-    private static boolean isStoreInstruction(Instruction instruction){
-        int opcode = instruction.getOpcode();
-        return InstructionTable.InstructionTypeTable[opcode] == InstructionTable.STORE_INSTRUCTION;
-    }
+private static boolean isStoreInstruction(Instruction instruction){
+    int opcode = instruction.getOpcode();
+    return InstructionTable.InstructionTypeTable[opcode] == InstructionTable.STORE_INSTRUCTION;
+}
 
     //////////////// Added methods to bytecode ///////////
 
-    
 
-    public static synchronized void writeBitToolOutputToFile(String className) {
-        try{
-            PrintWriter writer = new PrintWriter("bitToolOutput.txt", "UTF-8");
-            writer.println("Complexity: " + complexity.get());
-            writer.close();
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-    }
 
-    public static synchronized void incComplexity(int weight){
-        complexity.set(complexity.get() + weight);
+public static synchronized void writeBitToolOutputToFile(String className) {
+    try{
+        PrintWriter writer = new PrintWriter("bitToolOutput.txt", "UTF-8");
+        writer.println("Complexity: " + complexity.get());
+        writer.close();
+    }catch(Exception e){
+        e.printStackTrace();
     }
+}
+
+public static synchronized void incComplexity(int weight){
+    complexity.set(complexity.get() + weight);
+}
 
     /*
     public static synchronized void count(int incr) {

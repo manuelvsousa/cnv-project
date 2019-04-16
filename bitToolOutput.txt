@@ -1,3 +1,1 @@
-Instruction total: 0
-Load instructions: 0
-Store instructions: 0
+Complexity: 37100241887
