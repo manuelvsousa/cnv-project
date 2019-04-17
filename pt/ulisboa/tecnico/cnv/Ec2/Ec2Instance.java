@@ -26,9 +26,14 @@ import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
 import com.amazonaws.services.ec2.model.DescribeAvailabilityZonesResult;
 
+
 public class Ec2Instance{
 
 /*
+<<<<<<< HEAD
+=======
+	private String _name;
+>>>>>>> acfe89f7dfa24789f46ca1391fc3430f3ec353e9
 	private String _imageId;
 
 	public Ec2Instance(String name, String imageId){
@@ -39,9 +44,11 @@ public class Ec2Instance{
 	}
 
 */
+
 	private String instanceId;
 	private AmazonEC2      ec2;
 	private AmazonCloudWatch cloudWatch;
+
 
 
 	public Ec2Instance(){
@@ -49,8 +56,6 @@ public class Ec2Instance{
 	}
 
 	private  void init(){
-
-
 
 
 	     AWSCredentials credentials = null;
@@ -87,6 +92,7 @@ public class Ec2Instance{
                                .withMaxCount(1)
                                .withKeyName("cnv-proj")
                                .withSecurityGroups("test-secur");
+
 							   
             RunInstancesResult runInstancesResult =
                ec2.runInstances(runInstancesRequest);
