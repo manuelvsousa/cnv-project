@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.cnv.hill.mss;
 
+
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
@@ -10,6 +11,7 @@ import com.amazonaws.services.dynamodbv2.util.TableUtils;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.Condition;
 
 public class MSSDynamo {
 
