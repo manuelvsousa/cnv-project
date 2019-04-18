@@ -79,8 +79,8 @@ public class BitTool {
                 }
             }
 
-            bb.addBefore("BitTool", "incTimeComplexity", totalLoadStoreWeight + totalAllocWeight);
-            bb.addBefore("BitTool", "incSpaceComplexity", totalLoadStoreWeight + totalAllocWeight);
+            bb.addBefore("BitTool", "incTimeComplexity", totalLoadStoreWeight);
+            bb.addBefore("BitTool", "incSpaceComplexity", totalAllocWeight);
             totalLoadStoreWeight = 0;
             totalAllocWeight = 0;
         }
