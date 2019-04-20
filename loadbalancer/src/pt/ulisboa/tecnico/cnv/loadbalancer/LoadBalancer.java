@@ -26,26 +26,6 @@ public class LoadBalancer {
 		init();
 	}
 
-	private void init(){
-		AWSCredentials credentials = null;
-		try {
-			credentials = new ProfileCredentialsProvider().getCredentials();
-		} catch (Exception e) {
-			throw new AmazonClientException(
-				"Cannot load the credentials from the credential profiles file. " +
-				"Please make sure that your credentials file is at the correct " +
-				"location (~/.aws/credentials), and is in valid format.",
-				e);
-		}
-		ec2 = AmazonEC2ClientBuilder.standard().withRegion("us-east-1")
-		.withCredentials(new AWSStaticCredentialsProvider(credentials)).build();
-
-		cloudWatch = AmazonCloudWatchClientBuilder.standard().withRegion("us-east-1")
-		.withCredentials(new AWSStaticCredentialsProvider(credentials)).build();
-
-	}
-
-
 	public double getAverageCPUUsage(Instance instance){
 		Dimension instanceDimension = new Dimension();
 		instanceDimension.setName("InstanceId");
@@ -75,8 +55,6 @@ public class LoadBalancer {
 		}
 	}
 
-	
-
 	public Set<Instance> getInstances(){
 		Set<Instance> instances = new HashSet<Instance>();
 		DescribeInstancesResult describeInstancesResult = ec2.describeInstances();
@@ -95,6 +73,22 @@ public class LoadBalancer {
 		return cloudWatch;
 	}
 
+	private void init(){
+		AWSCredentials credentials = null;
+		try {
+			credentials = new ProfileCredentialsProvider().getCredentials();
+		} catch (Exception e) {
+			throw new AmazonClientException(
+					"Cannot load the credentials from the credential profiles file. " +
+							"Please make sure that your credentials file is at the correct " +
+							"location (~/.aws/credentials), and is in valid format.",
+					e);
+		}
+		ec2 = AmazonEC2ClientBuilder.standard().withRegion("us-east-1")
+				.withCredentials(new AWSStaticCredentialsProvider(credentials)).build();
 
+		cloudWatch = AmazonCloudWatchClientBuilder.standard().withRegion("us-east-1")
+				.withCredentials(new AWSStaticCredentialsProvider(credentials)).build();
+	}
 
 }

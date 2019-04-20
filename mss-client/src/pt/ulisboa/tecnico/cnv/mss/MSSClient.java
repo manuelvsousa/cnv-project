@@ -5,9 +5,11 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.PutItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.model.*;
 import pt.ulisboa.tecnico.cnv.dto.Point;
+import pt.ulisboa.tecnico.cnv.dto.Request;
 import pt.ulisboa.tecnico.cnv.dto.RequestMetricData;
 import pt.ulisboa.tecnico.cnv.dto.Size;
 
@@ -33,10 +35,11 @@ public class MSSClient {
                 mssClient.createTable(requestMetricTableName, 10L, 5L, "Id", "N");
             }
 
+            // sample code
             Point startingPoint = new Point(25,25);
             Size mapSize = new Size(500,500);
-            RequestMetricData requestMetricData = new RequestMetricData(RequestMetricData.SearchAlgorithm.ASTAR
-                    , mapSize, startingPoint, 42, 41);
+            Request request = new Request(Request.SearchAlgorithm.ASTAR, mapSize, startingPoint);
+            RequestMetricData requestMetricData = new RequestMetricData(request, 42, 41);
             mssClient.insertRequestMetricData(requestMetricTableName, requestMetricData);
 
         }
@@ -47,23 +50,25 @@ public class MSSClient {
         System.out.println("Success.");
     }
 
-    private void insertRequestMetricData(String tableName, RequestMetricData data) {
+    private PutItemOutcome insertRequestMetricData(String tableName, RequestMetricData data) {
         Table table = dynamoDB.getTable(tableName);
+        Request req = data.getRequest();
 
         try {
             Item item = new Item().withPrimaryKey("Id", 101)
-                    .withString("SearchAlgorithm", data.getSearchAlgorithm().toString())
-                    .withInt("MapWidth", data.getMapSize().getWidth())
-                    .withInt("MapHeight", data.getMapSize().getHeight())
-                    .withInt("StartX", data.getStartingPoint().getX())
-                    .withInt("StartY", data.getStartingPoint().getY())
+                    .withString("SearchAlgorithm", req.getSearchAlgorithm().toString())
+                    .withInt("MapWidth", req.getMapSize().getWidth())
+                    .withInt("MapHeight", req.getMapSize().getHeight())
+                    .withInt("StartX", req.getStartingPoint().getX())
+                    .withInt("StartY", req.getStartingPoint().getY())
                     .withLong("TimeComplexity", data.getTimeComplexity())
                     .withLong("SpaceComplexity", data.getSpaceComplexity());
-            table.putItem(item);
+            return table.putItem(item);
         }catch(Exception e){
             System.err.println("Failed to create item in " + tableName);
             System.err.println(e.getMessage());
         }
+        return null;
     }
 
     private void deleteTable(String tableName) {
