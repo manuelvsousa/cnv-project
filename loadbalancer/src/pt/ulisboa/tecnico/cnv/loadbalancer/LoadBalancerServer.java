@@ -4,14 +4,17 @@ import com.amazonaws.services.ec2.model.Instance;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import pt.ulisboa.tecnico.cnv.dto.Point;
 import pt.ulisboa.tecnico.cnv.dto.Request;
+import pt.ulisboa.tecnico.cnv.dto.Size;
+import pt.ulisboa.tecnico.cnv.hillclimber.solver.SolverArgumentParser;
+import pt.ulisboa.tecnico.cnv.query.QueryParser;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.net.URL;
+import java.util.*;
 import java.util.concurrent.Executors;
 
 public class LoadBalancerServer{
@@ -33,8 +36,36 @@ public class LoadBalancerServer{
 	static class MyHandler implements HttpHandler {
 		@Override
 		public void handle(final HttpExchange t) throws IOException {
+			// parse the query
+			final String query = t.getRequestURI().getQuery();
+			SolverArgumentParser ap = QueryParser.parse(query);
+			System.out.println("RequestURI: " + t.getRequestURI().toString());
+
+			// create request object
+			Request.SearchAlgorithm searchAlgorithm = Request.SearchAlgorithm.valueOf(ap.getSolverStrategy().toString());
+			Size mapSize = new Size(ap.getX1() - ap.getX0(), ap.getY1() - ap.getY0());
+			Point startingPoint = new Point(ap.getStartX(), ap.getStartY());
+			Request request = new Request(searchAlgorithm, mapSize, startingPoint);
+
+			// redirect to an instance
+			Instance instance = selectInstanceForRequest(request);
+			String ip = instance.getPrivateIpAddress();
+			redirectHttp(buildRedirectUrl(ip, 8080, t.getRequestURI().toString()));
+
+			// store request in the hashmap
+			List<Request> requestList = requests.get(instance);
+			if(requestList == null){
+				requestList = new ArrayList<Request>();
+				requests.put(instance, requestList);
+			}
 
 		}
+
+
+	}
+
+	private static void redirectHttp(String buildRedirectUrl) {
+		// TODO
 	}
 
 	/**
@@ -82,6 +113,10 @@ public class LoadBalancerServer{
 		}
 		return count;
 
+	}
+
+	private static String buildRedirectUrl(String ip, int port, String requestUriStr){
+		return "http://" + ip + ":" + port + "/" + requestUriStr;
 	}
 
 

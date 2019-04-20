@@ -17,9 +17,14 @@ import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import pt.ulisboa.tecnico.cnv.dto.Point;
+import pt.ulisboa.tecnico.cnv.dto.Request;
+import pt.ulisboa.tecnico.cnv.dto.Size;
+import pt.ulisboa.tecnico.cnv.dynamodb.DynamoDBAccess;
 import pt.ulisboa.tecnico.cnv.hillclimber.solver.Solver;
 import pt.ulisboa.tecnico.cnv.hillclimber.solver.SolverArgumentParser;
 import pt.ulisboa.tecnico.cnv.hillclimber.solver.SolverFactory;
+import pt.ulisboa.tecnico.cnv.query.QueryParser;
 
 import javax.imageio.ImageIO;
 
@@ -40,42 +45,10 @@ public class WebServer {
 	static class MyHandler implements HttpHandler {
 		public void handle(final HttpExchange t) throws IOException {
 
-			long searchRectangleSize = 0;
 			// Get the query.
 			final String query = t.getRequestURI().getQuery();
-			System.out.println("> Query:\t" + query);
-			// Break it down into String[].
-			final String[] params = query.split("&");
-
-			// Store as if it was a direct call to SolverMain.
-			final ArrayList<String> newArgs = new ArrayList<>();
-			for (final String p : params) {
-				final String[] splitParam = p.split("=");
-				newArgs.add("-" + splitParam[0]);
-				newArgs.add(splitParam[1]);
-			}
-			newArgs.add("-d");
-
-			// Store from ArrayList into regular String[].
-			final String[] args = new String[newArgs.size()];
-			int i = 0;
-			for(String arg: newArgs) {
-				args[i] = arg;
-				i++;
-			}
-
-			SolverArgumentParser ap = null;
-			try {
-				// Get user-provided flags.
-				ap = new SolverArgumentParser(args);
-			}catch(Exception e) {
-				System.out.println(e);
-				return;
-			}
+			SolverArgumentParser ap = QueryParser.parse(query);
 			System.out.println("> Finished parsing args.");
-			// calculate search rectangle size
-			searchRectangleSize = (ap.getY1() - ap.getStartY()) * (ap.getX1()-ap.getStartX());
-			System.out.println("> Search rectangle size: " + searchRectangleSize);
 
 			// Create solver instance from factory.
 			final Solver s = SolverFactory.getInstance().makeSolver(ap);

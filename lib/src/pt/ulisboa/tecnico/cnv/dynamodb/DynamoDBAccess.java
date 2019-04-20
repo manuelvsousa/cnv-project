@@ -52,11 +52,11 @@ public class DynamoDBAccess {
         Size mapSize = new Size(500,500);
         Request request = new Request(Request.SearchAlgorithm.ASTAR, mapSize, startingPoint);
         RequestMetricData requestMetricData = new RequestMetricData(request, 42, 41);
-        insertRequestMetricData(requestMetricTableName, requestMetricData);
+        insertRequestMetricData(requestMetricData);
     }
 
-    private PutItemOutcome insertRequestMetricData(String tableName, RequestMetricData data) {
-        Table table = dynamoDB.getTable(tableName);
+    public PutItemOutcome insertRequestMetricData(RequestMetricData data) {
+        Table table = dynamoDB.getTable(requestMetricTableName);
         Request req = data.getRequest();
 
         try {
@@ -70,7 +70,7 @@ public class DynamoDBAccess {
                     .withLong("SpaceComplexity", data.getSpaceComplexity());
             return table.putItem(item);
         }catch(Exception e){
-            System.err.println("Failed to create item in " + tableName);
+            System.err.println("Failed to create item in " + requestMetricTableName);
             System.err.println(e.getMessage());
         }
         return null;
