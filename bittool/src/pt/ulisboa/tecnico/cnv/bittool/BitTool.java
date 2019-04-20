@@ -13,8 +13,8 @@ public class BitTool {
     };
 
     // instruction weights compared to single instruction to summarise complexity of all instructions in a single value
-    private static int LOAD_STORE_INST_WEIGHT = 50;
-    private static int ALLOC_INST_WEIGHT = 100;
+    private static int LOAD_STORE_INST_WEIGHT = 15;
+    private static int ALLOC_INST_WEIGHT = 25;
     
     private static PrintStream out = null;
     private static int[] allocInstrOpcodes = {InstructionTable.NEW, InstructionTable.newarray 
