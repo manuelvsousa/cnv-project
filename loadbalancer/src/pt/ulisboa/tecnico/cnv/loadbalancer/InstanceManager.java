@@ -15,14 +15,15 @@ import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Reservation;
+import pt.ulisboa.tecnico.cnv.dto.Request;
 
 import java.util.*;
 
-public class LoadBalancer {
+public class InstanceManager {
 	private AmazonEC2      ec2;
 	private AmazonCloudWatch cloudWatch;
 
-	public LoadBalancer(){
+	public InstanceManager(){
 		init();
 	}
 

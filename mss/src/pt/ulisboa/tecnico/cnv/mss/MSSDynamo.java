@@ -3,7 +3,6 @@ package pt.ulisboa.tecnico.cnv.mss;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.policy.conditions.StringCondition;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
@@ -12,7 +11,6 @@ import com.amazonaws.services.dynamodbv2.util.TableUtils;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.locks.Condition;
 
 public class MSSDynamo {
 
@@ -97,7 +95,7 @@ public class MSSDynamo {
         /*
         // Scan items for movies with a year attribute greater than 1985
         HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
-        Condition condition = new StringCondition(ComparisonOperator.GT.toString(), )
+        Condition condition = new StringCondition(Compa risonOperator.GT.toString(), )
                 .withComparisonOperator(ComparisonOperator.GT.toString())
                 .withAttributeValueList(new AttributeValue().withN("1985"));
         scanFilter.put("year", condition);

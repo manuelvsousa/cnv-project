@@ -7,6 +7,12 @@ public class RequestMetricData {
     private long timeComplexity;
     private long spaceComplexity;
 
+    // TODO
+    // duration
+    // ec2 instance that processed the request
+    // cpu load
+    // mem load?
+
     public RequestMetricData(Request request, long timeComplexity, long spaceComplexity) {
         this.request = request;
         this.timeComplexity = timeComplexity;
