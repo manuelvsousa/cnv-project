@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.cnv.hill.mss;
+package pt.ulisboa.tecnico.cnv.mss;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;

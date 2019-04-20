@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.cnv.hillclimber.Ec2;
+package pt.ulisboa.tecnico.cnv.hillclimber.ec2;
 
 
 import com.amazonaws.AmazonClientException;

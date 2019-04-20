@@ -38,7 +38,6 @@ public class WebServer {
 	}
 
 	static class MyHandler implements HttpHandler {
-        @Override
 		public void handle(final HttpExchange t) throws IOException {
 
 			long searchRectangleSize = 0;
@@ -119,16 +118,6 @@ public class WebServer {
 
 		}
 
-		public void storeMetricsInDynamoDB(){
-			// each record :
-			// search algorithm
-			// dataset size
-			// search rectangle size
-			// total number of instructions
-			// total number of load instructions
-			// total number of store instructions
-			// total number of bytes allocated
-		}
 	}
 
 }

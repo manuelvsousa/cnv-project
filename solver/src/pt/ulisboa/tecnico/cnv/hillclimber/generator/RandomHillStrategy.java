@@ -1,6 +1,6 @@
 package pt.ulisboa.tecnico.cnv.hillclimber.generator;
 
-import pt.ulisboa.tecnico.cnv.util.Perlin2d;
+import pt.ulisboa.tecnico.cnv.hillclimber.util.Perlin2d;
 
 public class RandomHillStrategy extends AbstractGeneratorStrategy {
 

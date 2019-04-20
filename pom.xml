@@ -13,7 +13,7 @@
         <module>solver</module>
         <module>lib</module>
         <module>loadbalancer</module>
-        <module>Ec2</module>
+        <module>ec2</module>
         <module>mss</module>
         <module>mss-client</module>
         <module>webserver</module>

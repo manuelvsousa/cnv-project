@@ -1,8 +1,9 @@
-package pt.ulisboa.tecnico.cnv.hill.mss;
+package pt.ulisboa.tecnico.cnv.mss;
 
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.auth.policy.conditions.StringCondition;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
@@ -39,7 +40,7 @@ public class MSSDynamo {
         }
         dynamoDB = AmazonDynamoDBClientBuilder.standard()
                 .withCredentials(credentialsProvider)
-                .withRegion("us-west-1")
+                .withRegion("us-east-1")
                 .build();
     }
 
@@ -93,9 +94,10 @@ public class MSSDynamo {
     }
 
     private ScanResult search(String value) {
+        /*
         // Scan items for movies with a year attribute greater than 1985
         HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
-        Condition condition = new Condition()
+        Condition condition = new StringCondition(ComparisonOperator.GT.toString(), )
                 .withComparisonOperator(ComparisonOperator.GT.toString())
                 .withAttributeValueList(new AttributeValue().withN("1985"));
         scanFilter.put("year", condition);
@@ -103,6 +105,8 @@ public class MSSDynamo {
         ScanResult scanResult = dynamoDB.scan(scanRequest);
         System.out.println("Result: " + scanResult);
         return scanResult;
+        */
+        return null;
     }
 
 }
