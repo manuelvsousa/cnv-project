@@ -2,6 +2,8 @@ package pt.ulisboa.tecnico.cnv.bittool;
 
 import BIT.highBIT.*;
 import BIT.lowBIT.Local_Variable_Table;
+import BIT.lowBIT.Method_Info;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.*;
 import java.util.*;
@@ -26,8 +28,17 @@ public class BitTool {
      * instruments them, and outputs them to the specified output directory.
      */
     public static void main(String argv[]) {
-        File file_in = new File(argv[0]);
-        String infilenames[] = file_in.list();
+        prepareSolverInstrumentation(argv);
+        prepareWebServerInstrumentation(argv);
+    }
+
+    /**
+     * Add Instrumentation calls to the solver classes
+     * @param argv
+     */
+    public static void prepareSolverInstrumentation(String argv[]){
+        File files_in_solver = new File(argv[0]);
+        String infilenames[] = files_in_solver.list();
 
         if(infilenames != null){
             for (int i = 0; i < infilenames.length; i++) {
@@ -35,7 +46,7 @@ public class BitTool {
                 if (infilename.endsWith(".class")) {
                     // create class info object
                     ClassInfo ci = new ClassInfo(argv[0] + System.getProperty("file.separator") + infilename);
-                    
+
                     for (Enumeration e = ci.getRoutines().elements(); e.hasMoreElements(); ) {
                         Routine routine = (Routine) e.nextElement();
 
@@ -44,16 +55,49 @@ public class BitTool {
                             // add output metrics method call first
                             addMetricOutputOnSolveImageCall(routine, ci);
                         }
-                        
+
                         // LOAD, STORE, ALLOC instruction metrics
                         addInstructionMetricsToRoutine(routine, ci);
-                        
+
                         // Instruction count metric
                         addInstructionCountMetricToRoutine(routine);
                     }
+
                     ci.write(argv[1] + System.getProperty("file.separator") + infilename);
                 }
-            } 
+            }
+        }
+    }
+
+    /**
+     * Add instrumentation calls to the web server classes
+     * @param argv
+     */
+    public static void prepareWebServerInstrumentation(String argv[]){
+        // Web server instrumentation
+        File files_in_webserver = new File(argv[2]);
+        String[] infilenames = files_in_webserver.list();
+
+        if(infilenames != null){
+            for (int i = 0; i < infilenames.length; i++) {
+                String infilename = infilenames[i];
+                if (infilename.endsWith(".class")) {
+                    // create class info object
+                    ClassInfo ci = new ClassInfo(argv[2] + System.getProperty("file.separator") + infilename);
+
+                    System.out.println(ci.getClassName());
+
+                    for (Enumeration e = ci.getRoutines().elements(); e.hasMoreElements(); ) {
+                        Routine routine = (Routine) e.nextElement();
+
+                        if(routine.getMethodName().equals("handle")){
+                            //routine.addAfter("MyHandler", "bitTest" , 42);
+                        }
+                    }
+
+                    ci.write(argv[3] + System.getProperty("file.separator") + infilename);
+                }
+            }
         }
     }
 
@@ -62,7 +106,7 @@ public class BitTool {
     public static void addMetricOutputOnSolveImageCall(Routine routine, ClassInfo ci){
         routine.addAfter("BitTool", "writeBitToolOutputToFile", ci.getClassName());
         Local_Variable_Table[] lvt = routine.getLVT();
-        System.out.println("test");
+        Method_Info method_info = routine.getMethodInfo();
     }
 
 

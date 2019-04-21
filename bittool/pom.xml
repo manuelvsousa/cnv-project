@@ -14,6 +14,11 @@
             <artifactId>lib</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.7</version>
+        </dependency>
     </dependencies>
 
     <properties>
@@ -21,8 +26,13 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <mainclass>pt.ulisboa.tecnico.cnv.bittool.BitTool</mainclass>
-        <inputClassDir>${project.basedir}/../solver/target/classes/pt/ulisboa/tecnico/cnv/hillclimber/solver</inputClassDir>
-        <outputClassDir>${inputClassDir}</outputClassDir>
+
+        <inputSolverClassDir>${project.basedir}/../solver/target/classes/pt/ulisboa/tecnico/cnv/hillclimber/solver</inputSolverClassDir>
+        <outputSolverClassDir>${inputSolverClassDir}</outputSolverClassDir>
+
+        <inputWebServerClassDir>${project.basedir}/../webserver/target/classes/pt/ulisboa/tecnico/cnv/webserver</inputWebServerClassDir>
+        <outputWebServerClassDir>${inputWebServerClassDir}</outputWebServerClassDir>
+
     </properties>
 
     <build>
@@ -43,8 +53,10 @@
                     <killAfter>-1</killAfter>
                     <mainClass>${mainclass}</mainClass>
                     <arguments>
-                        <argument>${inputClassDir}</argument>
-                        <argument>${outputClassDir}</argument>
+                        <argument>${inputSolverClassDir}</argument>
+                        <argument>${outputSolverClassDir}</argument>
+                        <argument>${inputWebServerClassDir}</argument>
+                        <argument>${outputWebServerClassDir}</argument>
                     </arguments>
                 </configuration>
             </plugin>

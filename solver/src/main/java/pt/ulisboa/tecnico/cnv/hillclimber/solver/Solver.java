@@ -270,4 +270,5 @@ public class Solver {
     public void setPos(int x, int y, byte cellStatus) {
         this.visitedGrid[x][y] = cellStatus;
     }
+
 }
