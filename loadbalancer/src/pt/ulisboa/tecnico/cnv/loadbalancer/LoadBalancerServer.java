@@ -1,6 +1,7 @@
 package pt.ulisboa.tecnico.cnv.loadbalancer;
 
 import com.amazonaws.services.ec2.model.Instance;
+import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -10,8 +11,9 @@ import pt.ulisboa.tecnico.cnv.dto.Size;
 import pt.ulisboa.tecnico.cnv.hillclimber.solver.SolverArgumentParser;
 import pt.ulisboa.tecnico.cnv.query.QueryParser;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.*;
@@ -36,36 +38,103 @@ public class LoadBalancerServer{
 	static class MyHandler implements HttpHandler {
 		@Override
 		public void handle(final HttpExchange t) throws IOException {
-			// parse the query
-			final String query = t.getRequestURI().getQuery();
-			SolverArgumentParser ap = QueryParser.parse(query);
-			System.out.println("RequestURI: " + t.getRequestURI().toString());
-
 			// create request object
-			Request.SearchAlgorithm searchAlgorithm = Request.SearchAlgorithm.valueOf(ap.getSolverStrategy().toString());
-			Size mapSize = new Size(ap.getX1() - ap.getX0(), ap.getY1() - ap.getY0());
-			Point startingPoint = new Point(ap.getStartX(), ap.getStartY());
-			Request request = new Request(searchAlgorithm, mapSize, startingPoint);
-
-			// redirect to an instance
-			Instance instance = selectInstanceForRequest(request);
-			String ip = instance.getPrivateIpAddress();
-			redirectHttp(buildRedirectUrl(ip, 8080, t.getRequestURI().toString()));
+			Request request = buildRequestFromQuery(t.getRequestURI().getQuery());
 
 			// store request in the hashmap
-			List<Request> requestList = requests.get(instance);
-			if(requestList == null){
-				requestList = new ArrayList<Request>();
-				requests.put(instance, requestList);
-			}
+			//storeRequest(request, instance);
 
+			// redirect and get buffered image response
+			//Instance instance = selectInstanceForRequest(request);
+			//String ip = instance.getPrivateIpAddress();
+
+			// use localhost for testing
+			String ip = "localhost";
+			String redirectUrl = buildRedirectUrl(ip, 8080);
+
+			BufferedImage bufferedImage = doGET(redirectUrl, t.getRequestURI().getQuery().toString());
+			int imageSize = getBufferedImageSize(bufferedImage);
+
+			// update request status
+			request.setRequestStatus(Request.Status.DONE);
+
+			OutputStream os = t.getResponseBody();
+			final Headers hdrs = t.getResponseHeaders();
+			t.sendResponseHeaders(200, imageSize);
+			hdrs.add("Content-Type", "image/png");
+			hdrs.add("Access-Control-Allow-Origin", "*");
+			hdrs.add("Access-Control-Allow-Credentials", "true");
+			hdrs.add("Access-Control-Allow-Methods", "POST, GET, HEAD, OPTIONS");
+			hdrs.add("Access-Control-Allow-Headers", "Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
+			ImageIO.write(bufferedImage, "png", os);
+			os.close();
 		}
-
-
 	}
 
-	private static void redirectHttp(String buildRedirectUrl) {
-		// TODO
+	private static Request buildRequestFromQuery(String query){
+		// parse query
+		SolverArgumentParser ap = QueryParser.parse(query);
+
+		// build request object
+		Request.SearchAlgorithm searchAlgorithm = Request.SearchAlgorithm.valueOf(ap.getSolverStrategy().toString());
+		Size mapSize = new Size(ap.getX1() - ap.getX0(), ap.getY1() - ap.getY0());
+		Point startingPoint = new Point(ap.getStartX(), ap.getStartY());
+		return new Request(searchAlgorithm, mapSize, startingPoint);
+	}
+
+	private static void storeRequest(Request request, Instance instance){
+		List<Request> requestList = requests.get(instance);
+		if(requestList == null){
+			requestList = new ArrayList<Request>();
+			requests.put(instance, requestList);
+		}
+	}
+
+	private static int getBufferedImageSize(BufferedImage bufferedImage){
+		try{
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ImageIO.write(bufferedImage, "png" ,baos);
+			return baos.toByteArray().length;
+		}catch(IOException ioe){
+			ioe.printStackTrace();
+		}
+		return 0;
+	}
+
+	private static BufferedImage doGET(String targetUrl, String urlParameters) {
+		BufferedImage image = null;
+		try {
+			URL url = new URL(targetUrl + "?" + urlParameters);
+			image = ImageIO.read(url);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return image;
+		/*
+		try{
+			URL url = new URL(targetUrl + "?" + urlParameters);
+			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+			connection.setRequestMethod("GET");
+			int respCode = connection.getResponseCode();
+
+			if(respCode == HttpURLConnection.HTTP_OK){
+				BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+
+				StringBuffer response = new StringBuffer();
+				String readLine;
+				while ((readLine = in.readLine()) != null) {
+					response.append(readLine);
+				} in.close();
+
+				return response.toString();
+			}
+		}catch(MalformedURLException mue){
+			mue.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return "";
+		*/
 	}
 
 	/**
@@ -115,8 +184,8 @@ public class LoadBalancerServer{
 
 	}
 
-	private static String buildRedirectUrl(String ip, int port, String requestUriStr){
-		return "http://" + ip + ":" + port + "/" + requestUriStr;
+	private static String buildRedirectUrl(String ip, int port){
+		return "http://" + ip + ":" + port + "/climb";
 	}
 
 
