@@ -5,8 +5,8 @@ import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-import pt.ulisboa.tecnico.cnv.request.Request;
-import pt.ulisboa.tecnico.cnv.request.RequestBuilder;
+import pt.ulisboa.tecnico.cnv.lib.request.Request;
+import pt.ulisboa.tecnico.cnv.lib.request.RequestBuilder;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;

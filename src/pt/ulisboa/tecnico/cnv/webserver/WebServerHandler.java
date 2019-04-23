@@ -6,9 +6,9 @@ import com.sun.net.httpserver.HttpHandler;
 import pt.ulisboa.tecnico.cnv.solver.Solver;
 import pt.ulisboa.tecnico.cnv.solver.SolverArgumentParser;
 import pt.ulisboa.tecnico.cnv.solver.SolverFactory;
-import pt.ulisboa.tecnico.cnv.query.QueryParser;
-import pt.ulisboa.tecnico.cnv.request.Request;
-import pt.ulisboa.tecnico.cnv.request.RequestBuilder;
+import pt.ulisboa.tecnico.cnv.lib.query.QueryParser;
+import pt.ulisboa.tecnico.cnv.lib.request.Request;
+import pt.ulisboa.tecnico.cnv.lib.request.RequestBuilder;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;

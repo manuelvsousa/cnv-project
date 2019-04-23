@@ -1,7 +1,7 @@
-package pt.ulisboa.tecnico.cnv.request;
+package pt.ulisboa.tecnico.cnv.lib.request;
 
 import pt.ulisboa.tecnico.cnv.solver.SolverArgumentParser;
-import pt.ulisboa.tecnico.cnv.query.QueryParser;
+import pt.ulisboa.tecnico.cnv.lib.query.QueryParser;
 
 /**
  * Helper class to build request objects

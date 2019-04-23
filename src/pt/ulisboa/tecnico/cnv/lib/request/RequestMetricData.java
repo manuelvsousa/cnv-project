@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.cnv.request;
+package pt.ulisboa.tecnico.cnv.lib.request;
 
 public class RequestMetricData {
     private Request request;

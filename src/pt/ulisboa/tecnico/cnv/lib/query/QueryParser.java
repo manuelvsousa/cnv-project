@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.cnv.query;
+package pt.ulisboa.tecnico.cnv.lib.query;
 
 import pt.ulisboa.tecnico.cnv.solver.SolverArgumentParser;
 

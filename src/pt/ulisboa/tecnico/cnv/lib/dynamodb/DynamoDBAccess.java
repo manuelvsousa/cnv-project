@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.cnv.dynamodb;
+package pt.ulisboa.tecnico.cnv.lib.dynamodb;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
@@ -7,10 +7,10 @@ import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.PutItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.model.*;
-import pt.ulisboa.tecnico.cnv.request.Point;
-import pt.ulisboa.tecnico.cnv.request.Request;
-import pt.ulisboa.tecnico.cnv.request.RequestMetricData;
-import pt.ulisboa.tecnico.cnv.request.Size;
+import pt.ulisboa.tecnico.cnv.lib.request.Point;
+import pt.ulisboa.tecnico.cnv.lib.request.Request;
+import pt.ulisboa.tecnico.cnv.lib.request.RequestMetricData;
+import pt.ulisboa.tecnico.cnv.lib.request.Size;
 
 import java.util.ArrayList;
 
