@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.cnv.ec2;
+package pt.ulisboa.tecnico.cnv.lib.ec2;
 
 
 import java.util.HashSet;
