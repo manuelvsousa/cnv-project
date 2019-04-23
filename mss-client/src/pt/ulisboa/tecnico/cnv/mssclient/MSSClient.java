@@ -33,17 +33,15 @@ public class MSSClient {
     }
 
     public void addMetrics(String ip, String algorithm, int mapWidth, int startX, int startY, int timeComplexity, int spaceComplexity) throws Exception {
-        JsonObject innerObject = new JsonObject();
-
-        innerObject.addProperty("ip", ip);
-        innerObject.addProperty("SearchAlgorithm", algorithm);
-        innerObject.addProperty("MapWidth", mapWidth);
-        innerObject.addProperty("StartX", mapWidth);
-        innerObject.addProperty("StartY", startX);
-        innerObject.addProperty("TimeComplexity", timeComplexity);
-        innerObject.addProperty("SpaceComplexity", spaceComplexity);
         HttpClient httpClient = HttpClientBuilder.create().build();
-        HttpGet request = new HttpGet("http://" + this.ip + ":" + this.port + "/addMetrics?ip=" + ip + "&algorithm=" + algorithm + "&mapwidth=" + mapWidth + "&startx=" + startX + "&starty=" + startY + "&timecomplexity=" + timeComplexity + "&spacecomplexity=" + spaceComplexity);
+        HttpGet request = new HttpGet("http://" + this.ip + ":" + this.port + "/addMetrics"
+                + "?ip=" + ip
+                + "&algorithm=" + algorithm
+                + "&mapwidth=" + mapWidth
+                + "&startx=" + startX
+                + "&starty=" + startY
+                + "&timecomplexity=" + timeComplexity
+                + "&spacecomplexity=" + spaceComplexity);
         HttpResponse response = httpClient.execute(request);
         String json = EntityUtils.toString(response.getEntity(), "UTF-8");
         Gson gson = new Gson(); // Or use new GsonBuilder().create();
