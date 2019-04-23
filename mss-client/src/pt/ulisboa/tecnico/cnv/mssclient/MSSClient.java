@@ -44,7 +44,7 @@ public class MSSClient {
                 + "&spacecomplexity=" + spaceComplexity);
         HttpResponse response = httpClient.execute(request);
         String json = EntityUtils.toString(response.getEntity(), "UTF-8");
-        Gson gson = new Gson(); // Or use new GsonBuilder().create();
+        Gson gson = new Gson();
         Map<String, Object> output = gson.fromJson(json, Map.class);
         if(!(boolean) output.get("success")){
             throw new RuntimeException(output.get("message").toString());
@@ -58,7 +58,7 @@ public class MSSClient {
         HttpGet request = new HttpGet("http://" + this.ip + ":" + this.port + "/getMetrics?id=" + id);
         HttpResponse response = httpClient.execute(request);
         String json = EntityUtils.toString(response.getEntity(), "UTF-8");
-        Gson gson = new Gson(); // Or use new GsonBuilder().create();
+        Gson gson = new Gson();
         Map<String, Object> output = gson.fromJson(json, Map.class);
         return output;
 
