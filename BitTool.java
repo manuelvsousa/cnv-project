@@ -145,11 +145,14 @@ public class BitTool {
     //////////////// Added methods to bytecode ///////////
 
     public static synchronized void sendMetricData(String className) {
-        Request request = WebServerHandler.request.get();
-
-        DynamoDBAccess dynDB = new DynamoDBAccess();
-        RequestMetricData mData = new RequestMetricData(request, complexity.get()[0], complexity.get()[1]);
-        dynDB.insertRequestMetricData(mData);
+        try{
+            PrintWriter writer = new PrintWriter("bitToolOutput.txt", "UTF-8");
+            writer.println("Time Complexity: " + complexity.get()[0]);
+            writer.println("Space Complexity: " + complexity.get()[1]);
+            writer.close();
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
     public static synchronized void incTimeComplexity(int weight){
