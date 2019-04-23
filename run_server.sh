@@ -1,0 +1,1 @@
+java -cp build pt.ulisboa.tecnico.cnv.webserver.WebServer
