@@ -45,6 +45,12 @@ public class MSSClient {
         HttpClient httpClient = HttpClientBuilder.create().build();
         HttpGet request = new HttpGet("http://" + this.ip + ":" + this.port + "/addMetrics?ip=" + ip + "&algorithm=" + algorithm + "&mapwidth=" + mapWidth + "&startx=" + startX + "&starty=" + startY + "&timecomplexity=" + timeComplexity + "&spacecomplexity=" + spaceComplexity);
         HttpResponse response = httpClient.execute(request);
+        String json = EntityUtils.toString(response.getEntity(), "UTF-8");
+        Gson gson = new Gson(); // Or use new GsonBuilder().create();
+        Map<String, Object> output = gson.fromJson(json, Map.class);
+        if(!(boolean) output.get("success")){
+            throw new RuntimeException(output.get("message").toString());
+        }
         System.out.println(response);
     }
 
