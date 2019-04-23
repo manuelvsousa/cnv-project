@@ -23,7 +23,8 @@ public class LoadBalancerServer{
 	public static void main(final String[] args) throws Exception {
 		final HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 8000), 0);
 		//final HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
-		server.createContext("/climb", new MyHandler());
+		server.createContext("/climb", new ClimbHandler());
+		server.createContext("/postMetricData", new PostMetricDataHandler());
 
 		// be aware! infinite pool of threads!
 		server.setExecutor(Executors.newCachedThreadPool());
@@ -32,7 +33,7 @@ public class LoadBalancerServer{
 		System.out.println(server.getAddress().toString());
 	}
 
-	static class MyHandler implements HttpHandler {
+	static class ClimbHandler implements HttpHandler {
 		public void handle(final HttpExchange t) throws IOException {
 			// create request object
 			Request request = RequestBuilder.fromQuery(t.getRequestURI().getQuery());
@@ -68,6 +69,15 @@ public class LoadBalancerServer{
 		}
 	}
 
+	static class PostMetricDataHandler implements HttpHandler{
+		public void handle(final HttpExchange t) throws IOException{
+			System.out.println(t.getRequestURI());
+
+			final Headers hdrs = t.getResponseHeaders();
+       		t.sendResponseHeaders(200, 0);
+		}
+	}
+
 
 	private static void storeRequest(Request request, Instance instance){
 		List<Request> requestList = requests.get(instance);
@@ -97,31 +107,6 @@ public class LoadBalancerServer{
 			e.printStackTrace();
 		}
 		return image;
-		/*
-		try{
-			URL url = new URL(targetUrl + "?" + urlParameters);
-			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-			connection.setRequestMethod("GET");
-			int respCode = connection.getResponseCode();
-
-			if(respCode == HttpURLConnection.HTTP_OK){
-				BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-
-				StringBuffer response = new StringBuffer();
-				String readLine;
-				while ((readLine = in.readLine()) != null) {
-					response.append(readLine);
-				} in.close();
-
-				return response.toString();
-			}
-		}catch(MalformedURLException mue){
-			mue.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return "";
-		*/
 	}
 
 	/**

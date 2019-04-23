@@ -1,5 +1,7 @@
 package pt.ulisboa.tecnico.cnv.lib.dynamodb;
 
+import java.util.concurrent.ThreadLocalRandom;
+import java.lang.Integer;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
@@ -47,7 +49,7 @@ public class DynamoDBAccess {
         System.out.println("Success.");
     }
 
-    private void loadSampleData(){
+    public void loadSampleData(){
         Point startingPoint = new Point(25,25);
         Size mapSize = new Size(500,500);
         Request request = new Request(Request.SearchAlgorithm.ASTAR, mapSize, startingPoint);
@@ -55,12 +57,12 @@ public class DynamoDBAccess {
         insertRequestMetricData(requestMetricData);
     }
 
-    public PutItemOutcome insertRequestMetricData(RequestMetricData data) {
+    public void insertRequestMetricData(RequestMetricData data) {
         Table table = dynamoDB.getTable(requestMetricTableName);
         Request req = data.getRequest();
 
         try {
-            Item item = new Item().withPrimaryKey("Id", 101)
+            Item item = new Item().withPrimaryKey("Id", ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE))
                     .withString("SearchAlgorithm", req.getSearchAlgorithm().toString())
                     .withInt("MapWidth", req.getMapSize().getWidth())
                     .withInt("MapHeight", req.getMapSize().getHeight())
@@ -68,12 +70,11 @@ public class DynamoDBAccess {
                     .withInt("StartY", req.getStartingPoint().getY())
                     .withLong("TimeComplexity", data.getTimeComplexity())
                     .withLong("SpaceComplexity", data.getSpaceComplexity());
-            return table.putItem(item);
+            table.putItem(item);
         }catch(Exception e){
             System.err.println("Failed to create item in " + requestMetricTableName);
             System.err.println(e.getMessage());
         }
-        return null;
     }
 
     private void deleteTable(String tableName) {

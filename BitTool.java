@@ -1,9 +1,17 @@
+import java.lang.StringBuffer;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 import BIT.highBIT.*;
 import BIT.lowBIT.Local_Variable_Table;
 import BIT.lowBIT.Method_Info;
 import pt.ulisboa.tecnico.cnv.webserver.WebServer;
 import pt.ulisboa.tecnico.cnv.webserver.WebServerHandler;
+import pt.ulisboa.tecnico.cnv.lib.request.Request;
+import pt.ulisboa.tecnico.cnv.lib.request.RequestMetricData;
+import pt.ulisboa.tecnico.cnv.lib.dynamodb.DynamoDBAccess;
 
 import java.io.*;
 import java.util.*;
@@ -72,7 +80,7 @@ public class BitTool {
     ////////// Add metric call methods /////////////////
 
     public static void addMetricOutputOnSolveImageCall(Routine routine, ClassInfo ci){
-        routine.addAfter("BitTool", "writeBitToolOutputToFile", ci.getClassName());
+        routine.addAfter("BitTool", "sendMetricData", ci.getClassName());
     }
 
 
@@ -136,16 +144,12 @@ public class BitTool {
 
     //////////////// Added methods to bytecode ///////////
 
-    public static synchronized void writeBitToolOutputToFile(String className) {
-        try{
-            PrintWriter writer = new PrintWriter("bitToolOutput.txt", "UTF-8");
-            //writer.println("Search algorithm: " + WebServerHandler.request.get().getSearchAlgorithm());
-            writer.println("Time Complexity: " + complexity.get()[0]);
-            writer.println("Space Complexity: " + complexity.get()[1]);
-            writer.close();
-        }catch(Exception e){
-            e.printStackTrace();
-        }
+    public static synchronized void sendMetricData(String className) {
+        Request request = WebServerHandler.request.get();
+
+        DynamoDBAccess dynDB = new DynamoDBAccess();
+        RequestMetricData mData = new RequestMetricData(request, complexity.get()[0], complexity.get()[1]);
+        dynDB.insertRequestMetricData(mData);
     }
 
     public static synchronized void incTimeComplexity(int weight){
@@ -154,5 +158,6 @@ public class BitTool {
     public static synchronized void incSpaceComplexity(int weight){
         complexity.get()[1] += weight;
     }
+
 }
 
