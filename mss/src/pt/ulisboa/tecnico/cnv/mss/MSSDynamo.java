@@ -8,7 +8,6 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.model.*;
 import com.amazonaws.services.dynamodbv2.util.TableUtils;
-import com.google.gson.JsonObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -46,8 +45,8 @@ public class MSSDynamo {
     public static void main(String[] args) throws Exception {
         MSSDynamo mssD = new MSSDynamo();
         try {
-            mssD.addItem("1.1.1.1","olaola", 1, 1, 3, 4,5);
-            mssD.addItem("0.0.1.1","adeusadeus", 2, 3, 3, 7,9);
+            mssD.addItem("1.1.1.1", "olaola", 1, 1, 3, 4, 5);
+            mssD.addItem("0.0.1.1", "adeusadeus", 2, 3, 3, 7, 9);
             System.out.println(mssD.search(4).toString());
             System.out.println(mssD.search(5).toString());
 
@@ -67,15 +66,15 @@ public class MSSDynamo {
         }
     }
 
-    public void addItem(String ip, String algorithm, int mapWidth,int startX,int startY,int timeComplexity,int spaceComplexity) {
+    public void addItem(String ip, String algorithm, int mapWidth, int startX, int startY, int timeComplexity, int spaceComplexity) {
         Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
         item.put("ip", new AttributeValue(ip));
         item.put("SearchAlgorithm", new AttributeValue(algorithm));
         item.put("MapWidth", new AttributeValue().withN(Integer.toString(mapWidth)));
         item.put("StartX", new AttributeValue().withN(Integer.toString(startX)));
-        item.put("StartY",  new AttributeValue().withN(Integer.toString(startY)));
-        item.put("TimeComplexity",  new AttributeValue().withN(Integer.toString(timeComplexity)));
-        item.put("SpaceComplexity",  new AttributeValue().withN(Integer.toString(spaceComplexity)));
+        item.put("StartY", new AttributeValue().withN(Integer.toString(startY)));
+        item.put("TimeComplexity", new AttributeValue().withN(Integer.toString(timeComplexity)));
+        item.put("SpaceComplexity", new AttributeValue().withN(Integer.toString(spaceComplexity)));
         PutItemRequest putItemRequest = new PutItemRequest(TABLE_NAME, item);
         dynamoDB.putItem(putItemRequest);
     }
@@ -94,7 +93,7 @@ public class MSSDynamo {
         HashMap<String, Condition> scanFilter = new HashMap<>();
         Condition condition = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ.toString())
-                .withAttributeValueList( new AttributeValue().withN(Integer.toString(timeComplexity)));
+                .withAttributeValueList(new AttributeValue().withN(Integer.toString(timeComplexity)));
         scanFilter.put("TimeComplexity", condition);
         ScanRequest scanRequest = new ScanRequest(TABLE_NAME).withScanFilter(scanFilter);
         ScanResult scanResult = dynamoDB.scan(scanRequest);

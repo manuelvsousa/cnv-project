@@ -4,7 +4,6 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.google.gson.JsonObject;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import pt.ulisboa.tecnico.cnv.mss.MSSDynamo;
 
 import java.io.IOException;
@@ -23,7 +22,7 @@ public class getMetrics extends AbstractHandler {
         Map<String, String> params = queryToMap(t.getRequestURI().getQuery());
         JsonObject innerObject = new JsonObject();
 
-        if(!params.containsKey("id")){
+        if (!params.containsKey("id")) {
             innerObject.addProperty("message", "id parameter does not exist");
             innerObject.addProperty("success", false);
         } else {
