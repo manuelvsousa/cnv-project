@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>bittool</groupId>
+    <groupId>cnv</groupId>
     <artifactId>bittool</artifactId>
     <version>1.0-SNAPSHOT</version>
 
@@ -19,6 +19,11 @@
             <artifactId>commons-lang3</artifactId>
             <version>3.7</version>
         </dependency>
+        <dependency>
+            <groupId>cnv</groupId>
+            <artifactId>webserver</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <properties>
@@ -26,6 +31,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <mainclass>pt.ulisboa.tecnico.cnv.bittool.BitTool</mainclass>
+
+        <m2SolverClassDir>~/.m2/repository/cnv/solver/1.0-SNAPSHOT/solver-1.0-SNAPSHOT.jar/pt/ulisboa/tecnico/cnv/hillclimber/solver</m2SolverClassDir>
 
         <inputSolverClassDir>${project.basedir}/../solver/target/classes/pt/ulisboa/tecnico/cnv/hillclimber/solver</inputSolverClassDir>
         <outputSolverClassDir>${inputSolverClassDir}</outputSolverClassDir>
@@ -53,8 +60,8 @@
                     <killAfter>-1</killAfter>
                     <mainClass>${mainclass}</mainClass>
                     <arguments>
-                        <argument>${inputSolverClassDir}</argument>
-                        <argument>${outputSolverClassDir}</argument>
+                        <argument>${m2SolverClassDir}</argument>
+                        <argument>${m2SolverClassDir}</argument>
                         <argument>${inputWebServerClassDir}</argument>
                         <argument>${outputWebServerClassDir}</argument>
                     </arguments>

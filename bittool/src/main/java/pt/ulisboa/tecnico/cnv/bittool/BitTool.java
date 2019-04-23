@@ -4,6 +4,8 @@ import BIT.highBIT.*;
 import BIT.lowBIT.Local_Variable_Table;
 import BIT.lowBIT.Method_Info;
 import org.apache.commons.lang3.ArrayUtils;
+import pt.ulisboa.tecnico.cnv.webserver.WebServer;
+import pt.ulisboa.tecnico.cnv.webserver.WebServerHandler;
 
 import java.io.*;
 import java.util.*;
@@ -29,7 +31,8 @@ public class BitTool {
      */
     public static void main(String argv[]) {
         prepareSolverInstrumentation(argv);
-        prepareWebServerInstrumentation(argv);
+        //prepareWebServerInstrumentation(argv);
+
     }
 
     /**
@@ -91,7 +94,9 @@ public class BitTool {
                         Routine routine = (Routine) e.nextElement();
 
                         if(routine.getMethodName().equals("handle")){
-                            //routine.addAfter("MyHandler", "bitTest" , 42);
+                            BasicBlock bb = (BasicBlock) routine.getBasicBlocks().elements().nextElement();
+                            //bb.addBefore("MyHandler", "bitTestInstance" , 42);
+                            bb.addBefore("MyHandler", "bitTest" , 42);
                         }
                     }
 
@@ -105,8 +110,6 @@ public class BitTool {
 
     public static void addMetricOutputOnSolveImageCall(Routine routine, ClassInfo ci){
         routine.addAfter("BitTool", "writeBitToolOutputToFile", ci.getClassName());
-        Local_Variable_Table[] lvt = routine.getLVT();
-        Method_Info method_info = routine.getMethodInfo();
     }
 
 
@@ -170,11 +173,10 @@ public class BitTool {
 
     //////////////// Added methods to bytecode ///////////
 
-
-
     public static synchronized void writeBitToolOutputToFile(String className) {
         try{
             PrintWriter writer = new PrintWriter("bitToolOutput.txt", "UTF-8");
+            //writer.println("Search algorithm: " + WebServerHandler.request.get().getSearchAlgorithm());
             writer.println("Time Complexity: " + complexity.get()[0]);
             writer.println("Space Complexity: " + complexity.get()[1]);
             writer.close();
@@ -184,6 +186,11 @@ public class BitTool {
     }
 
     public static synchronized void incTimeComplexity(int weight){
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         complexity.get()[0] += weight;
     }
     public static synchronized void incSpaceComplexity(int weight){
