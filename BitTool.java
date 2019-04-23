@@ -1,4 +1,3 @@
-package pt.ulisboa.tecnico.cnv.bittool;
 
 import BIT.highBIT.*;
 import BIT.lowBIT.Local_Variable_Table;
@@ -30,7 +29,6 @@ public class BitTool {
      */
     public static void main(String argv[]) {
         prepareSolverInstrumentation(argv);
-        //prepareWebServerInstrumentation(argv);
 
     }
 
@@ -66,40 +64,6 @@ public class BitTool {
                     }
 
                     ci.write(argv[1] + System.getProperty("file.separator") + infilename);
-                }
-            }
-        }
-    }
-
-    /**
-     * Add instrumentation calls to the web server classes
-     * @param argv
-     */
-    public static void prepareWebServerInstrumentation(String argv[]){
-        // Web server instrumentation
-        File files_in_webserver = new File(argv[2]);
-        String[] infilenames = files_in_webserver.list();
-
-        if(infilenames != null){
-            for (int i = 0; i < infilenames.length; i++) {
-                String infilename = infilenames[i];
-                if (infilename.endsWith(".class")) {
-                    // create class info object
-                    ClassInfo ci = new ClassInfo(argv[2] + System.getProperty("file.separator") + infilename);
-
-                    System.out.println(ci.getClassName());
-
-                    for (Enumeration e = ci.getRoutines().elements(); e.hasMoreElements(); ) {
-                        Routine routine = (Routine) e.nextElement();
-
-                        if(routine.getMethodName().equals("handle")){
-                            BasicBlock bb = (BasicBlock) routine.getBasicBlocks().elements().nextElement();
-                            //bb.addBefore("MyHandler", "bitTestInstance" , 42);
-                            bb.addBefore("MyHandler", "bitTest" , 42);
-                        }
-                    }
-
-                    ci.write(argv[3] + System.getProperty("file.separator") + infilename);
                 }
             }
         }
@@ -185,11 +149,6 @@ public class BitTool {
     }
 
     public static synchronized void incTimeComplexity(int weight){
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         complexity.get()[0] += weight;
     }
     public static synchronized void incSpaceComplexity(int weight){
