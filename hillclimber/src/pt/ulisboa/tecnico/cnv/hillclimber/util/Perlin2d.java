@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.cnv.hillclimber.util;
 
+
 import pt.ulisboa.tecnico.cnv.hillclimber.util.interpolator.CosineInterpolator;
 import pt.ulisboa.tecnico.cnv.hillclimber.util.interpolator.Interpolator;
 

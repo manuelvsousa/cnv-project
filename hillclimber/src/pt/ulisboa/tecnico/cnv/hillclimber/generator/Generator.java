@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.cnv.hillclimber.generator;
 
+
 import pt.ulisboa.tecnico.cnv.hillclimber.util.ImageBuilder;
 
 import java.awt.image.BufferedImage;

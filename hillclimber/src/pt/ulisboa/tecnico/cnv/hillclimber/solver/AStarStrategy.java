@@ -107,9 +107,20 @@ public class AStarStrategy extends AbstractSolverStrategy {
 
         Node solutionNode = null;
 
+        if(sol.isSolution(initialNode.coordinate)) {
+            sol.setPos(initialNode.getX(), initialNode.getY(), Solver.EXPLORED);
+            sol.getPath().add(initialNode.coordinate);
+
+            return;
+        }
+
+
         while( ! pq.isEmpty()) {
             final Node examiningNode = pq.poll();
             openMap.remove(examiningNode);
+
+
+
 
             final List<Node> neighbors = examiningNode.getNeighboors(sol);
 
