@@ -8,9 +8,6 @@ import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
 
 
-
-
-
 public class DynamicTool{
 
 		private static int dyn_method_count = 0;
