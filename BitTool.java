@@ -28,7 +28,8 @@ public class BitTool {
     private static final int LOAD_STORE_INST_WEIGHT = 15;
     private static final int ALLOC_INST_WEIGHT = 25;
     private static final int CONDITIONAL_INST_WEIGHT = 25;
-    
+    private static final int COMPARISON_INST_WEIGHT = 25;
+
     private static PrintStream out = null;
     private static int[] allocInstrOpcodes = {InstructionTable.NEW, InstructionTable.newarray 
         , InstructionTable.anewarray, InstructionTable.multianewarray};
@@ -88,6 +89,7 @@ public class BitTool {
     // Adds LOAD, STORE, ALLOC metric calls to the end of the routine's basic blocks
     public static void addInstructionMetricsToRoutine(Routine routine, ClassInfo ci){
         int totalLoadStoreWeight = 0, totalAllocWeight = 0, totalConditionalWeight = 0;
+        int totalComparisonWeight = 0;
 
         for(Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements();){
             Instruction[] routineInstructions = routine.getInstructions();
@@ -101,10 +103,12 @@ public class BitTool {
                     totalAllocWeight += ALLOC_INST_WEIGHT;
                 }else if(isConditionalInstruction(instr)){
                     totalConditionalWeight += CONDITIONAL_INST_WEIGHT;
+                }else if(isComparisonInstruction(instr)){
+                    totalComparisonWeight += COMPARISON_INST_WEIGHT;
                 }
             }
 
-            bb.addBefore("BitTool", "incTimeComplexity", totalLoadStoreWeight + totalConditionalWeight);
+            bb.addBefore("BitTool", "incTimeComplexity", totalLoadStoreWeight + totalConditionalWeight + totalComparisonWeight);
             bb.addBefore("BitTool", "incSpaceComplexity", totalAllocWeight);
             totalLoadStoreWeight = 0;
             totalAllocWeight = 0;
@@ -119,7 +123,7 @@ public class BitTool {
         }
     }
 
-    /////////////////////////////////////////////
+    //////////  Auxiliary methods for bittool when adding bytecodes
 
     private static boolean isSolveImageRoutine(Routine routine){
         return routine.getMethodName().equals("solveImage");
@@ -148,6 +152,11 @@ public class BitTool {
     private static boolean isConditionalInstruction(Instruction instruction){
         return InstructionTable.InstructionTypeTable[instruction.getOpcode()]
                 == InstructionTable.CONDITIONAL_INSTRUCTION;
+    }
+
+    private static boolean isComparisonInstruction(Instruction instruction){
+        return InstructionTable.InstructionTypeTable[instruction.getOpcode()]
+                == InstructionTable.COMPARISON_INSTRUCTION;
     }
 
     //////////////// Added methods to bytecode ///////////
