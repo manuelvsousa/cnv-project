@@ -12,6 +12,7 @@ https://docs.google.com/document/d/10gtuVZq2Gyty4lxQBokVya3Mb3Le7LiKvWXuKjCphgk/
 - Amazon AWS SDK
 
 ##### Compiling
+
 Run in terminal:
 
 ```
@@ -31,10 +32,19 @@ To run the webserver run in terminal:
 bash run_server.sh <path_to_AWS_SDK_directory>
 ```
 
-And for the loadbalancer:
+For the loadbalancer:
 
 ```
 bash run_loadbalancer.sh <path_to_AWS_SDK_directory>
 ```
 
+For the mss:
 
+```
+bash run_mss_server.sh <path_to_AWS_SDK_directory>
+```
+
+### BitTool
+
+Currently the main under-development bittool is `BitTool.java` present in the root directory of the project. 
+The other bit tool `DynamicTool.java` is incomplete and for testing purposes only.
