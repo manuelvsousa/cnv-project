@@ -21,7 +21,6 @@ import java.nio.file.Paths;
 
 public class WebServerHandler implements HttpHandler {
     public static ThreadLocal<Request> request = new ThreadLocal<Request>();
-    //private static String in_dir =System.getProperty("user.home")+"//CNV//cnv-project//build//pt//ulisboa//tecnico//cnv//solver//";
     public void handle(final HttpExchange t) throws IOException {
 
         // Get the query.
@@ -30,9 +29,6 @@ public class WebServerHandler implements HttpHandler {
         request.set(RequestBuilder.fromQuery(query));
         System.out.println("> Finished parsing args.");
 
-
-        //File in = new File(in_dir);
-        //DynamicTool.tryDynamic(in, in);
 
         // Create solver instance from factory.
         final Solver s = SolverFactory.getInstance().makeSolver(ap);

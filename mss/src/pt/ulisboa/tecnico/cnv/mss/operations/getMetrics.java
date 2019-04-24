@@ -27,7 +27,6 @@ public class getMetrics extends AbstractHandler {
         if(params.containsKey("id")){
             ScanResult scanResult = mssDynamo.search(Integer.parseInt(params.get("id")));
             if(scanResult.getItems().size() > 0 ){
-                System.out.println("test2)");
                 innerObject = scanResultItemToJsonObject(scanResult.getItems().get(0));
             }
         }else if(params.containsKey("searchAlgo") && params.containsKey("mapWidth")){

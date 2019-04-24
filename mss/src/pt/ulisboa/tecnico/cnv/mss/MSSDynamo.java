@@ -13,8 +13,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MSSDynamo {
-
-
     private static final String TABLE_NAME = "mss-metrics";
     private static final String ATTRIBUTE_NAME = "ip";
     static AmazonDynamoDB dynamoDB;
@@ -42,29 +40,6 @@ public class MSSDynamo {
                 .build();
     }
 
-    public static void main(String[] args) throws Exception {
-        MSSDynamo mssD = new MSSDynamo();
-        try {
-            mssD.addItem("1.1.1.1", "olaola", 1, 1, 3, 4, 5);
-            mssD.addItem("0.0.1.1", "adeusadeus", 2, 3, 3, 7, 9);
-            System.out.println(mssD.search(4).toString());
-            System.out.println(mssD.search(5).toString());
-
-        } catch (AmazonServiceException ase) {
-            System.out.println("Caught an AmazonServiceException, which means your request made it "
-                    + "to AWS, but was rejected with an error response for some reason.");
-            System.out.println("Error Message:    " + ase.getMessage());
-            System.out.println("HTTP Status Code: " + ase.getStatusCode());
-            System.out.println("AWS Error Code:   " + ase.getErrorCode());
-            System.out.println("Error Type:       " + ase.getErrorType());
-            System.out.println("Request ID:       " + ase.getRequestId());
-        } catch (AmazonClientException ace) {
-            System.out.println("Caught an AmazonClientException, which means the client encountered "
-                    + "a serious internal problem while trying to communicate with AWS, "
-                    + "such as not being able to access the network.");
-            System.out.println("Error Message: " + ace.getMessage());
-        }
-    }
 
     public void addItem(String ip, String algorithm, int mapWidth, int startX, int startY, int timeComplexity, int spaceComplexity) {
         Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
