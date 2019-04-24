@@ -4,8 +4,8 @@ if [ $# -ne 1 ]; then
 fi
 
 export _JAVA_OPTIONS="-XX:-UseSplitVerifier "$_JAVA_OPTIONS
+CP=$(echo $1/lib/*.jar | tr ' ' ':'):$(echo $1/third-party/lib/*.jar | tr ' ' ':'):build
 
-CP=$(echo lib/*.jar | tr ' ' ':'):$(echo $1/lib/*.jar | tr ' ' ':'):$(echo $1/third-party/lib/*.jar | tr ' ' ':'):build
 
-java -cp $CP pt.ulisboa.tecnico.cnv.webserver.WebServer
 
+java -cp $CP pt.ulisboa.tecnico.cnv.loadbalancer.LoadBalancer

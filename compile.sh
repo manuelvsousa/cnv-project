@@ -4,7 +4,6 @@ if [ $# -ne 1 ]; then
 fi
 
 AWS_SDK_CLASSPATH=$1"/lib/aws-java-sdk"*[0-9].jar # only get the main jar, only one ending in the version
-LIB_CLASSPATH="lib/*"
 CP=$(echo lib/*.jar | tr ' ' ':'):$(echo $AWS_SDK_CLASSPATH)
 
 rm -r build

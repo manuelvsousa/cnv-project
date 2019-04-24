@@ -16,7 +16,7 @@ import java.net.URL;
 import java.util.*;
 import java.util.concurrent.Executors;
 
-public class LoadBalancerServer{
+public class LoadBalancer {
 	private static HashMap<Instance, List<Request>> requests;
 	private static InstanceManager instanceManager = new InstanceManager();
 
