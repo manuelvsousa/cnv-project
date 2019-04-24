@@ -25,8 +25,9 @@ public class BitTool {
     };
 
     // instruction weights compared to single instruction to summarise complexity of all instructions in a single value
-    private static int LOAD_STORE_INST_WEIGHT = 15;
-    private static int ALLOC_INST_WEIGHT = 25;
+    private static final int LOAD_STORE_INST_WEIGHT = 15;
+    private static final int ALLOC_INST_WEIGHT = 25;
+    private static final int CONDITIONAL_INST_WEIGHT = 25;
     
     private static PrintStream out = null;
     private static int[] allocInstrOpcodes = {InstructionTable.NEW, InstructionTable.newarray 
@@ -64,7 +65,7 @@ public class BitTool {
                             addMetricOutputOnSolveImageCall(routine, ci);
                         }
 
-                        // LOAD, STORE, ALLOC instruction metrics
+                        // LOAD, STORE, ALLOC, CONDITIONAL
                         addInstructionMetricsToRoutine(routine, ci);
 
                         // Instruction count metric
@@ -86,7 +87,7 @@ public class BitTool {
 
     // Adds LOAD, STORE, ALLOC metric calls to the end of the routine's basic blocks
     public static void addInstructionMetricsToRoutine(Routine routine, ClassInfo ci){
-        int totalLoadStoreWeight = 0, totalAllocWeight = 0;
+        int totalLoadStoreWeight = 0, totalAllocWeight = 0, totalConditionalWeight = 0;
 
         for(Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements();){
             Instruction[] routineInstructions = routine.getInstructions();
@@ -98,10 +99,12 @@ public class BitTool {
                     totalLoadStoreWeight += LOAD_STORE_INST_WEIGHT;
                 }else if(isAllocInstruction(instr)){
                     totalAllocWeight += ALLOC_INST_WEIGHT;
+                }else if(isConditionalInstruction(instr)){
+                    totalConditionalWeight += CONDITIONAL_INST_WEIGHT;
                 }
             }
 
-            bb.addBefore("BitTool", "incTimeComplexity", totalLoadStoreWeight);
+            bb.addBefore("BitTool", "incTimeComplexity", totalLoadStoreWeight + totalConditionalWeight);
             bb.addBefore("BitTool", "incSpaceComplexity", totalAllocWeight);
             totalLoadStoreWeight = 0;
             totalAllocWeight = 0;
@@ -133,13 +136,18 @@ public class BitTool {
     }
 
     private static boolean isLoadInstruction(Instruction instruction){
-        int opcode = instruction.getOpcode();
-        return InstructionTable.InstructionTypeTable[opcode] == InstructionTable.LOAD_INSTRUCTION;
+        return InstructionTable.InstructionTypeTable[instruction.getOpcode()]
+                == InstructionTable.LOAD_INSTRUCTION;
     }
 
     private static boolean isStoreInstruction(Instruction instruction){
-        int opcode = instruction.getOpcode();
-        return InstructionTable.InstructionTypeTable[opcode] == InstructionTable.STORE_INSTRUCTION;
+        return InstructionTable.InstructionTypeTable[instruction.getOpcode()]
+                == InstructionTable.STORE_INSTRUCTION;
+    }
+
+    private static boolean isConditionalInstruction(Instruction instruction){
+        return InstructionTable.InstructionTypeTable[instruction.getOpcode()]
+                == InstructionTable.CONDITIONAL_INSTRUCTION;
     }
 
     //////////////// Added methods to bytecode ///////////
