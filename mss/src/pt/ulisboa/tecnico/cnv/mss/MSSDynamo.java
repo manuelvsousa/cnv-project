@@ -15,8 +15,8 @@ import java.util.Map;
 public class MSSDynamo {
 
 
-    private static final String TABLE_NAME = "mss-metrics2";
-    private static final String ATTRIBUTE_NAME = "name";
+    private static final String TABLE_NAME = "mss-metrics";
+    private static final String ATTRIBUTE_NAME = "ip";
     static AmazonDynamoDB dynamoDB;
 
 
@@ -45,8 +45,10 @@ public class MSSDynamo {
     public static void main(String[] args) throws Exception {
         MSSDynamo mssD = new MSSDynamo();
         try {
-            mssD.addItem("Bill & Ted's Excellent Adventure", 1989, "****", "James", "Sara");
-            System.out.println(mssD.search("1989").toString());
+            mssD.addItem("1.1.1.1", "olaola", 1, 1, 3, 4, 5);
+            mssD.addItem("0.0.1.1", "adeusadeus", 2, 3, 3, 7, 9);
+            System.out.println(mssD.search(4).toString());
+            System.out.println(mssD.search(5).toString());
 
         } catch (AmazonServiceException ase) {
             System.out.println("Caught an AmazonServiceException, which means your request made it "
@@ -64,18 +66,20 @@ public class MSSDynamo {
         }
     }
 
-    public static void addItem(String name, int year, String rating, String... fans) {
+    public void addItem(String ip, String algorithm, int mapWidth, int startX, int startY, int timeComplexity, int spaceComplexity) {
         Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
-        item.put("name", new AttributeValue(name));
-        item.put("year", new AttributeValue().withN(Integer.toString(year)));
-        item.put("rating", new AttributeValue(rating));
-        item.put("fans", new AttributeValue().withSS(fans));
+        item.put("ip", new AttributeValue(ip));
+        item.put("SearchAlgorithm", new AttributeValue(algorithm));
+        item.put("MapWidth", new AttributeValue().withN(Integer.toString(mapWidth)));
+        item.put("StartX", new AttributeValue().withN(Integer.toString(startX)));
+        item.put("StartY", new AttributeValue().withN(Integer.toString(startY)));
+        item.put("TimeComplexity", new AttributeValue().withN(Integer.toString(timeComplexity)));
+        item.put("SpaceComplexity", new AttributeValue().withN(Integer.toString(spaceComplexity)));
         PutItemRequest putItemRequest = new PutItemRequest(TABLE_NAME, item);
-        PutItemResult asd = dynamoDB.putItem(putItemRequest);
+        dynamoDB.putItem(putItemRequest);
     }
 
     private void create() throws Exception {
-        // Create a table with a primary hash key named 'name', which holds a string
         CreateTableRequest createTableRequest = new CreateTableRequest().withTableName(TABLE_NAME)
                 .withKeySchema(new KeySchemaElement().withAttributeName(ATTRIBUTE_NAME).withKeyType(KeyType.HASH))
                 .withAttributeDefinitions(new AttributeDefinition().withAttributeName(ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.S))
@@ -83,28 +87,17 @@ public class MSSDynamo {
 
         TableUtils.createTableIfNotExists(dynamoDB, createTableRequest);
         TableUtils.waitUntilActive(dynamoDB, TABLE_NAME);
-        DescribeTableRequest describeTableRequest = new DescribeTableRequest().withTableName(TABLE_NAME);
-        TableDescription tableDescription = dynamoDB.describeTable(describeTableRequest).getTable();
     }
 
-    public void addKeyValuePair() {
-
-    }
-
-    private ScanResult search(String value) {
-        /*
-        // Scan items for movies with a year attribute greater than 1985
-        HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
-        Condition condition = new StringCondition(Compa risonOperator.GT.toString(), )
-                .withComparisonOperator(ComparisonOperator.GT.toString())
-                .withAttributeValueList(new AttributeValue().withN("1985"));
-        scanFilter.put("year", condition);
+    public ScanResult search(int timeComplexity) {
+        HashMap<String, Condition> scanFilter = new HashMap<>();
+        Condition condition = new Condition()
+                .withComparisonOperator(ComparisonOperator.EQ.toString())
+                .withAttributeValueList(new AttributeValue().withN(Integer.toString(timeComplexity)));
+        scanFilter.put("TimeComplexity", condition);
         ScanRequest scanRequest = new ScanRequest(TABLE_NAME).withScanFilter(scanFilter);
         ScanResult scanResult = dynamoDB.scan(scanRequest);
-        System.out.println("Result: " + scanResult);
         return scanResult;
-        */
-        return null;
     }
 
 }
