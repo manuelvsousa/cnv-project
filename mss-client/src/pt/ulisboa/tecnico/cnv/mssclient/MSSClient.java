@@ -20,18 +20,6 @@ public class MSSClient {
         this.mssServerPort = mssServerPort;
     }
 
-    public static void main(String[] args) throws Exception {
-        // test code
-        try {
-            MSSClient msscli = new MSSClient("127.0.0.1", 8001);
-            System.out.println(msscli.getMetrics(7));
-            msscli.addMetrics("0.0.1.7", "caccacacacca", 6, 6, 3, 9, 9);
-            System.out.println(msscli.getMetrics(9));
-        } catch (AmazonServiceException ase) {
-
-        }
-    }
-
     public void addMetrics(String ip, String algorithm, int mapWidth, int startX, int startY, int timeComplexity, int spaceComplexity) throws Exception {
         HttpClient httpClient = HttpClientBuilder.create().build();
         HttpGet request = new HttpGet("http://" + this.mssServerIp + ":" + this.mssServerPort + "/addMetrics"
