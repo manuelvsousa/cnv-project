@@ -17,14 +17,14 @@ import java.io.*;
 import java.util.*;
 
 public class BitTool {
-    /* long[] { time, space } */
-    private static ThreadLocal<long[]> complexity = new ThreadLocal<long[]>() {
+    /* long[] { time complexity, space complexity} */
+    private static ThreadLocal<long[]> metricData = new ThreadLocal<long[]>() {
         @Override public long[] initialValue(){
-            return new long[] { 0, 0 };
+            return new long[] { 0, 0};
         }
     };
 
-    // instruction weights compared to single instruction to summarise complexity of all instructions in a single value
+    // instruction weights compared to single instruction to summarise metricData of all instructions in a single value
     private static final int LOAD_STORE_INST_WEIGHT = 15;
     private static final int ALLOC_INST_WEIGHT = 25;
     private static final int CONDITIONAL_INST_WEIGHT = 25;
@@ -39,7 +39,6 @@ public class BitTool {
      */
     public static void main(String argv[]) {
         prepareSolverInstrumentation(argv);
-
     }
 
     /**
@@ -66,11 +65,8 @@ public class BitTool {
                             addMetricOutputOnSolveImageCall(routine, ci);
                         }
 
-                        // LOAD, STORE, ALLOC, CONDITIONAL
+                        // LOAD, STORE, ALLOC, CONDITIONAL + # instructions
                         addInstructionMetricsToRoutine(routine, ci);
-
-                        // Instruction count metric
-                        addInstructionCountMetricToRoutine(routine);
                     }
 
                     ci.write(argv[1] + System.getProperty("file.separator") + infilename);
@@ -80,6 +76,7 @@ public class BitTool {
     }
 
     ////////// Add metric call methods /////////////////
+
 
     public static void addMetricOutputOnSolveImageCall(Routine routine, ClassInfo ci){
         routine.addAfter("BitTool", "sendMetricData", ci.getClassName());
@@ -108,20 +105,13 @@ public class BitTool {
                 }
             }
 
-            bb.addBefore("BitTool", "incTimeComplexity", totalLoadStoreWeight + totalConditionalWeight + totalComparisonWeight);
+            bb.addBefore("BitTool", "incTimeComplexity", totalLoadStoreWeight + totalConditionalWeight + totalComparisonWeight + bb.size());
             bb.addBefore("BitTool", "incSpaceComplexity", totalAllocWeight);
             totalLoadStoreWeight = 0;
             totalAllocWeight = 0;
         }
     }
 
-    // add instruction count metric call to a routine
-    public static void addInstructionCountMetricToRoutine(Routine routine){
-        for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
-            BasicBlock bb = (BasicBlock) b.nextElement();
-            bb.addBefore("BitTool", "incTimeComplexity", new Integer(bb.size()));
-        }
-    }
 
     //////////  Auxiliary methods for bittool when adding bytecodes
 
@@ -164,8 +154,8 @@ public class BitTool {
     public static synchronized void sendMetricData(String className) {
         try{
             PrintWriter writer = new PrintWriter("bitToolOutput.txt", "UTF-8");
-            writer.println("Time Complexity: " + complexity.get()[0]);
-            writer.println("Space Complexity: " + complexity.get()[1]);
+            writer.println("Time Complexity: " + metricData.get()[0]);
+            writer.println("Space Complexity: " + metricData.get()[1]);
             writer.close();
         }catch(Exception e){
             e.printStackTrace();
@@ -173,11 +163,14 @@ public class BitTool {
     }
 
     public static synchronized void incTimeComplexity(int weight){
-        complexity.get()[0] += weight;
+        metricData.get()[0] += weight;
     }
     public static synchronized void incSpaceComplexity(int weight){
-        complexity.get()[1] += weight;
+        metricData.get()[1] += weight;
     }
+
+
+
 
 }
 
