@@ -7,6 +7,7 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import pt.ulisboa.tecnico.cnv.lib.request.Request;
 import pt.ulisboa.tecnico.cnv.lib.request.RequestBuilder;
+import pt.ulisboa.tecnico.cnv.mssclient.MSSClient;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -19,6 +20,7 @@ import java.util.concurrent.Executors;
 public class LoadBalancer {
 	private static HashMap<Instance, List<Request>> runningRequests;
 	private static InstanceManager instanceManager = new InstanceManager();
+	private static MSSClient mssClient = new MSSClient("127.0.0.1", 8001);
 
 	public static void main(final String[] args) throws Exception {
 		final HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 8000), 0);
@@ -37,21 +39,20 @@ public class LoadBalancer {
 		public void handle(final HttpExchange t) throws IOException {
 			// create request object
 			Request request = RequestBuilder.fromQuery(t.getRequestURI().getQuery());
+			estimateRequestComplexity(request);
 
-			// store request in the hashmap
-			//storeRequest(request, instance);
+			// select an instance to send this request to and get it's ip
+			Instance instance = selectInstanceForRequest(request);
+			String ip = instance.getPrivateIpAddress();
 
-			// redirect and get buffered image response
-			//Instance instance = selectInstanceForRequest(request);
-			//String ip = instance.getPrivateIpAddress();
+			// store request in the hashmap for this instance
+			storeRequest(request, instance);
 
-			// use localhost for testing
-			String ip = "localhost";
+			//String ip = "localhost";
 			String redirectUrl = buildRedirectUrl(ip, 8080);
 
 			BufferedImage bufferedImage = doGET(redirectUrl, t.getRequestURI().getQuery().toString());
 			int imageSize = getBufferedImageSize(bufferedImage);
-
 
 			OutputStream os = t.getResponseBody();
 			final Headers hdrs = t.getResponseHeaders();
@@ -63,6 +64,8 @@ public class LoadBalancer {
 			hdrs.add("Access-Control-Allow-Headers", "Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
 			ImageIO.write(bufferedImage, "png", os);
 			os.close();
+
+
 		}
 	}
 
@@ -72,14 +75,54 @@ public class LoadBalancer {
 	 * @return instance
 	 */
 	private static Instance selectInstanceForRequest(Request request){
+		Instance instance = getInstanceLowestEstimatedTimeComplexity();
+
+
+		return instance;
+	}
+
+	public static void estimateRequestComplexity(Request request){
 		// get metrics of similar requests and estimate complexity of this request
+		List<Object> metrics = null; // = mssClient.getMetrics(request.getSearchAlgorithm().toString(), request.getMapSize().getWidth());
+		int estimatedTimeComplexity, estimatedSpaceComplexity;
+		int timeSum=0, spaceSum=0;
+		for(int i = 0; i < metrics.size(); i++){
+			timeSum += metrics.get(i).getTimeComplexity();
+			spaceSum += metrics.get(i).getSpaceComplexity();
+		}
+		estimatedTimeComplexity = timeSum/metrics.size();
+		estimatedSpaceComplexity = spaceSum/metrics.size();
 
-		// get total estimated complexity of each running instance
+		request.setEstimatedTimeComplexity(estimatedTimeComplexity);
+		request.setEstimatedSpaceComplexity(estimatedSpaceComplexity);
+	}
 
-		// send request to the instance with least total estimated complexity
 
+	/**
+	 * Find the instance with the lowest estimated time complexity
+	 * @return
+	 */
+	private static Instance getInstanceLowestEstimatedTimeComplexity(){
+		Instance selectedInstance = null;
+		int lowestTimeComplexity = Integer.MAX_VALUE;
+		int curSum = 0;
+		Set<Instance> instances = instanceManager.getInstances();
+		for(Instance instance: instances){
+			List<Request> requests = runningRequests.get(instance);
+			// sum estimated time complexities of all requests
+			// any running request has estimated values, first thing loadbalancer will do is estimate given metric data in MSS
+			for(Request req : requests){
+				curSum += req.getEstimatedTimeComplexity();
+			}
 
-		return null;
+			if(curSum < lowestTimeComplexity){
+				lowestTimeComplexity = curSum;
+				selectedInstance = instance;
+			}
+			curSum = 0;
+		}
+
+		return selectedInstance;
 	}
 
 

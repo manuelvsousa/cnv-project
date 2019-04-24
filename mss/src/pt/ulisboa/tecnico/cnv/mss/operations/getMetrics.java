@@ -27,6 +27,7 @@ public class getMetrics extends AbstractHandler {
         if(params.containsKey("id")){
             ScanResult scanResult = mssDynamo.search(Integer.parseInt(params.get("id")));
             if(scanResult.getItems().size() > 0 ){
+                System.out.println("test2)");
                 innerObject = scanResultItemToJsonObject(scanResult.getItems().get(0));
             }
         }else if(params.containsKey("searchAlgo") && params.containsKey("mapWidth")){
@@ -36,12 +37,13 @@ public class getMetrics extends AbstractHandler {
                 ((JsonArray) innerObject).add(scanResultItemToJsonObject(item));
             }
 
-        }else{
-            innerObject = new JsonObject();
-            ((JsonObject) innerObject).addProperty("message", "invalid request parameters, missing id or searchAlgo and mapWidth");
-            ((JsonObject) innerObject).addProperty("success", false);
         }
 
+        if(innerObject == null){
+            innerObject = new JsonObject();
+            ((JsonObject) innerObject).addProperty("message", "Invalid Request or no results found.");
+            ((JsonObject) innerObject).addProperty("success", false);
+        }
 
         String response = innerObject.toString();
         t.sendResponseHeaders(200, response.length());

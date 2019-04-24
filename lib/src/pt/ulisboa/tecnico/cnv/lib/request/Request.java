@@ -11,7 +11,8 @@ public class Request {
     private Size mapSize;
     private Point startingPoint;
 
-    private RequestMetricData estimatedRequestMetricData;
+    private int estimatedTimeComplexity;
+    private int estimatedSpaceComplexity;
 
     public Request(SearchAlgorithm searchAlgorithm, Size mapSize, Point startingPoint) {
         this.searchAlgorithm = searchAlgorithm;
@@ -58,4 +59,19 @@ public class Request {
         }
     };
 
+    public int getEstimatedTimeComplexity() {
+        return estimatedTimeComplexity;
+    }
+
+    public void setEstimatedTimeComplexity(int estimatedTimeComplexity) {
+        this.estimatedTimeComplexity = estimatedTimeComplexity;
+    }
+
+    public int getEstimatedSpaceComplexity() {
+        return estimatedSpaceComplexity;
+    }
+
+    public void setEstimatedSpaceComplexity(int estimatedSpaceComplexity) {
+        this.estimatedSpaceComplexity = estimatedSpaceComplexity;
+    }
 }

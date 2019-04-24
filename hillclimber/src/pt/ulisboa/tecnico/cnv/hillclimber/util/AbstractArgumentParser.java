@@ -1,10 +1,10 @@
 package pt.ulisboa.tecnico.cnv.hillclimber.util;
 
-import org.apache.commons.cli.*;
-
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.commons.cli.*;
 
 public abstract class AbstractArgumentParser implements ArgumentParser {
     protected final Options options = new Options();

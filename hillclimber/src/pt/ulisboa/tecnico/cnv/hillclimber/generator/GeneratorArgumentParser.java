@@ -1,7 +1,7 @@
 package pt.ulisboa.tecnico.cnv.hillclimber.generator;
 
-import org.apache.commons.cli.*;
 import pt.ulisboa.tecnico.cnv.hillclimber.util.AbstractArgumentParser;
+import org.apache.commons.cli.Option;
 
 public class GeneratorArgumentParser extends AbstractArgumentParser {
     public enum GeneratorParameters {
@@ -28,9 +28,6 @@ public class GeneratorArgumentParser extends AbstractArgumentParser {
 
     @Override
     public void parseValues(final String[] args) {
-
-
-
 
         if(super.cmd.hasOption(GeneratorParameters.STRATEGY.toString())) {
             final String strategy = super.cmd.getOptionValue(GeneratorParameters.STRATEGY.toString());

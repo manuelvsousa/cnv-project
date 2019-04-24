@@ -8,7 +8,7 @@ import java.net.InetSocketAddress;
 
 public class MSSServer {
     private static MSSServer instance = null;
-    private int PORT = 8000;
+    private int PORT = 8001;
     private MSSDynamo mssDynamo;
 
     private MSSServer() throws Exception {

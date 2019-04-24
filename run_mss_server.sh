@@ -7,5 +7,4 @@ export _JAVA_OPTIONS="-XX:-UseSplitVerifier "$_JAVA_OPTIONS
 CP=lib/gson-2.8.2.jar:$(echo $1/lib/*.jar | tr ' ' ':'):$(echo $1/third-party/lib/*.jar | tr ' ' ':'):build
 
 
-
-java -cp $CP pt.ulisboa.tecnico.cnv.loadbalancer.LoadBalancer
+java -cp $CP pt.ulisboa.tecnico.cnv.mss.MSSServer

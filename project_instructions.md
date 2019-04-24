@@ -37,12 +37,12 @@ In Amazon EC2 instances, it should look like:
 
 You will launch solver jobs through the faculty web page at http://groups.tecnico.ulisboa.pt/meic-cnv/cnv-project/. In this link there is a simple HTML page where you can choose the map to execute, the search strategy (BFS, DFS, ASTAR) to use, the starting point (xS, yS), the top-left corner (x0, y0) and bottom-right corner (x1, y1) of the bounding-rectangle.
 
-You must also specify the address and port of your Amazon EC2 instance or load balancer so that your browser sends the request to it and receives the solution when it finishes.
+You must also specify the address and mssServerPort of your Amazon EC2 instance or load balancer so that your browser sends the request to it and receives the solution when it finishes.
 
-When you configure the parameters such as your Amazon EC2 instance (load balancer) address and port, the search algorithm to use, the starting point and the bounding rectangle coordinates and the map on which to execute the solver, you can press the **Execute** button.
+When you configure the parameters such as your Amazon EC2 instance (load balancer) address and mssServerPort, the search algorithm to use, the starting point and the bounding rectangle coordinates and the map on which to execute the solver, you can press the **Execute** button.
 Your browser will then send a request to your web server running on Amazon EC2.
 
-We provide an example web server which listens for requests on port 8000 - **see below for more information**.
+We provide an example web server which listens for requests on mssServerPort 8000 - **see below for more information**.
 
 ## This code has three main Java applications:
 
@@ -60,7 +60,7 @@ When the solver finishes, the resulting map (with a drawn path) is saved on the 
 This image is then sent as the response (to the computer where your browser is open) and drawn via JavaScript on the browser.
 
 The following may be performed to run the compiled server class (provided by the faculty).
-This launches the example server listening on port 8000:
+This launches the example server listening on mssServerPort 8000:
 
 	cd $HOME/cnv-project
 	java pt.ulisboa.tecnico.cnv.server.WebServer

@@ -89,12 +89,12 @@ public class MSSDynamo {
         TableUtils.waitUntilActive(dynamoDB, TABLE_NAME);
     }
 
-    public ScanResult search(int timeComplexity) {
+    public ScanResult search(int id) {
         HashMap<String, Condition> scanFilter = new HashMap<>();
         Condition condition = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ.toString())
-                .withAttributeValueList(new AttributeValue().withN(Integer.toString(timeComplexity)));
-        scanFilter.put("TimeComplexity", condition);
+                .withAttributeValueList(new AttributeValue().withN(Integer.toString(id)));
+        scanFilter.put("id", condition);
         ScanRequest scanRequest = new ScanRequest(TABLE_NAME).withScanFilter(scanFilter);
         ScanResult scanResult = dynamoDB.scan(scanRequest);
         return scanResult;
@@ -108,7 +108,6 @@ public class MSSDynamo {
         Condition mapCondition = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ.toString())
                 .withAttributeValueList(new AttributeValue().withN(Integer.toString(mapWidth)));
-        scanFilter.put("SearchAlgorithm", algoCondition);
         scanFilter.put("MapWidth", mapCondition);
         ScanRequest scanRequest = new ScanRequest(TABLE_NAME).withScanFilter(scanFilter);
         ScanResult scanResult = dynamoDB.scan(scanRequest);
