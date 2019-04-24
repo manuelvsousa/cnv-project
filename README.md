@@ -36,6 +36,5 @@ And for the loadbalancer:
 ```
 bash run_loadbalancer.sh <path_to_AWS_SDK_directory>
 ```
->>>>>>> 4d097ba932a309e04e12788787ebdcc7040f8640
 
 
