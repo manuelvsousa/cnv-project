@@ -70,13 +70,12 @@ public class LoadBalancer {
 	}
 
 	/**
-	 * Select the instance that we want to send the request to (main algorithm)
+	 * Select the instance that we want to send the request to
 	 * @param request request to be sent and processed at the instance
 	 * @return instance
 	 */
 	private static Instance selectInstanceForRequest(Request request){
 		Instance instance = getInstanceLowestEstimatedTimeComplexity();
-
 
 		return instance;
 	}
