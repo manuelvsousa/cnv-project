@@ -17,14 +17,14 @@ import java.util.*;
 import java.util.concurrent.Executors;
 
 public class LoadBalancer {
-	private static HashMap<Instance, List<Request>> requests;
+	private static HashMap<Instance, List<Request>> runningRequests;
 	private static InstanceManager instanceManager = new InstanceManager();
 
 	public static void main(final String[] args) throws Exception {
 		final HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 8000), 0);
 		//final HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
 		server.createContext("/climb", new ClimbHandler());
-		server.createContext("/postMetricData", new PostMetricDataHandler());
+		server.createContext("/requestFinishedProcessing", new PostMetricDataHandler());
 
 		// be aware! infinite pool of threads!
 		server.setExecutor(Executors.newCachedThreadPool());
@@ -49,12 +49,9 @@ public class LoadBalancer {
 			String ip = "localhost";
 			String redirectUrl = buildRedirectUrl(ip, 8080);
 
-			request.setRequestStatus(Request.Status.RUNNING);
 			BufferedImage bufferedImage = doGET(redirectUrl, t.getRequestURI().getQuery().toString());
 			int imageSize = getBufferedImageSize(bufferedImage);
 
-			// update request status
-			request.setRequestStatus(Request.Status.DONE);
 
 			OutputStream os = t.getResponseBody();
 			final Headers hdrs = t.getResponseHeaders();
@@ -69,6 +66,23 @@ public class LoadBalancer {
 		}
 	}
 
+	/**
+	 * Select the instance that we want to send the request to (main algorithm)
+	 * @param request request to be sent and processed at the instance
+	 * @return instance
+	 */
+	private static Instance selectInstanceForRequest(Request request){
+		// get metrics of similar requests and estimate complexity of this request
+
+		// get total estimated complexity of each running instance
+
+		// send request to the instance with least total estimated complexity
+
+
+		return null;
+	}
+
+
 	static class PostMetricDataHandler implements HttpHandler{
 		public void handle(final HttpExchange t) throws IOException{
 			System.out.println(t.getRequestURI());
@@ -80,10 +94,10 @@ public class LoadBalancer {
 
 
 	private static void storeRequest(Request request, Instance instance){
-		List<Request> requestList = requests.get(instance);
+		List<Request> requestList = runningRequests.get(instance);
 		if(requestList == null){
 			requestList = new ArrayList<Request>();
-			requests.put(instance, requestList);
+			runningRequests.put(instance, requestList);
 		}
 	}
 
@@ -109,18 +123,9 @@ public class LoadBalancer {
 		return image;
 	}
 
-	/**
-	 * Select the instance that we want to send the request to (main algorithm)
-	 * @param request request to be sent and processed at the instance
-	 * @return instance
-	 */
-	private static Instance selectInstanceForRequest(Request request){
-		// temporary -> select instance with least # of requests running
-		return getInstanceLeastRunningRequests();
-	}
 
 	/**
-	 * Get the instance with the lowest number of requests running concurrently
+	 * Get the instance with the lowest number of runningRequests running concurrently
 	 * @return instance
 	 */
 	private static Instance getInstanceLeastRunningRequests(){
@@ -128,7 +133,7 @@ public class LoadBalancer {
 		Instance minInstance = null;
 		int minCount = Integer.MAX_VALUE;
 		for(Instance instance : instances){
-			int runningCount = countRunningRequestsAtInstance(instance);
+			int runningCount = runningRequests.get(instance).size();
 			if(runningCount < minCount){
 				minCount = runningCount;
 				minInstance = instance;
@@ -137,24 +142,6 @@ public class LoadBalancer {
 		return minInstance;
 	}
 
-	/**
-	 * Count number of running requests at a specific ec2 instance
-	 * @param instance ec2 instance
-	 * @return number of running requests
-	 */
-	private static int countRunningRequestsAtInstance(Instance instance){
-		int count = 0;
-		List<Request> instanceRequests = requests.get(instance);
-		if(instanceRequests != null){
-			for(Request req : instanceRequests){
-				if(req.getRequestStatus() == Request.Status.RUNNING){
-					count++;
-				}
-			}
-		}
-		return count;
-
-	}
 
 	private static String buildRedirectUrl(String ip, int port){
 		return "http://" + ip + ":" + port + "/climb";

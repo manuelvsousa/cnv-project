@@ -100,4 +100,19 @@ public class MSSDynamo {
         return scanResult;
     }
 
+    public ScanResult search(String searchAlgorithm, int mapWidth){
+        HashMap<String, Condition> scanFilter = new HashMap<>();
+        Condition algoCondition = new Condition()
+                .withComparisonOperator(ComparisonOperator.EQ.toString())
+                .withAttributeValueList(new AttributeValue().withS(searchAlgorithm));
+        Condition mapCondition = new Condition()
+                .withComparisonOperator(ComparisonOperator.EQ.toString())
+                .withAttributeValueList(new AttributeValue().withN(Integer.toString(mapWidth)));
+        scanFilter.put("SearchAlgorithm", algoCondition);
+        scanFilter.put("MapWidth", mapCondition);
+        ScanRequest scanRequest = new ScanRequest(TABLE_NAME).withScanFilter(scanFilter);
+        ScanResult scanResult = dynamoDB.scan(scanRequest);
+        return scanResult;
+    }
+
 }
