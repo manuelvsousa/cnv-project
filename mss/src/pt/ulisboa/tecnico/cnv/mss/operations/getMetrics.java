@@ -30,7 +30,7 @@ public class getMetrics extends AbstractHandler {
                 innerObject = scanResultItemToJsonObject(scanResult.getItems().get(0));
             }
         }else if(params.containsKey("searchAlgo") && params.containsKey("mapWidth")){
-            ScanResult scanResult = mssDynamo.search(params.get("searchAlgorithm"), Integer.parseInt("mapWidth"));
+            ScanResult scanResult = mssDynamo.search(params.get("searchAlgo"), 2 ); //Integer.parseInt(params.get("mapWidth")));
             innerObject = new JsonArray();
             for (Map<String, AttributeValue> item : scanResult.getItems()) {
                 ((JsonArray) innerObject).add(scanResultItemToJsonObject(item));

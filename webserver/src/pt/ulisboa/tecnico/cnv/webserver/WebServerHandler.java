@@ -3,6 +3,7 @@ package pt.ulisboa.tecnico.cnv.webserver;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import pt.ulisboa.tecnico.cnv.hillclimber.solver.Solver;
 import pt.ulisboa.tecnico.cnv.hillclimber.solver.SolverArgumentParser;
 import pt.ulisboa.tecnico.cnv.hillclimber.solver.SolverFactory;
 import pt.ulisboa.tecnico.cnv.lib.query.QueryParser;

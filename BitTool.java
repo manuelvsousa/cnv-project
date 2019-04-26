@@ -11,7 +11,6 @@ import pt.ulisboa.tecnico.cnv.webserver.WebServer;
 import pt.ulisboa.tecnico.cnv.webserver.WebServerHandler;
 import pt.ulisboa.tecnico.cnv.lib.request.Request;
 import pt.ulisboa.tecnico.cnv.lib.request.RequestMetricData;
-import pt.ulisboa.tecnico.cnv.lib.dynamodb.DynamoDBAccess;
 
 import java.io.*;
 import java.util.*;

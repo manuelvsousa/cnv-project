@@ -33,7 +33,6 @@ public class MSSServer {
         server.setExecutor(null); // creates a default executor
         server.start();
         System.out.println("Service running at port  " + this.PORT);
-        System.out.println("CTRL+C to exit");
     }
 
 }

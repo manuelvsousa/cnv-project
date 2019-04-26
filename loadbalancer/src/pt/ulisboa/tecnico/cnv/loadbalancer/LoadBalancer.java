@@ -82,12 +82,21 @@ public class LoadBalancer {
 
 	public static void estimateRequestComplexity(Request request){
 		// get metrics of similar requests and estimate complexity of this request
+
+		// testing
+		try {
+			mssClient.getMetrics(request.getSearchAlgorithm().toString(), request.getMapSize().getWidth());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+
 		List<Object> metrics = null; // = mssClient.getMetrics(request.getSearchAlgorithm().toString(), request.getMapSize().getWidth());
 		int estimatedTimeComplexity, estimatedSpaceComplexity;
 		int timeSum=0, spaceSum=0;
 		for(int i = 0; i < metrics.size(); i++){
-			timeSum += metrics.get(i).getTimeComplexity();
-			spaceSum += metrics.get(i).getSpaceComplexity();
+		//	timeSum += metrics.get(i).getTimeComplexity();
+		//	spaceSum += metrics.get(i).getSpaceComplexity();
 		}
 		estimatedTimeComplexity = timeSum/metrics.size();
 		estimatedSpaceComplexity = spaceSum/metrics.size();
