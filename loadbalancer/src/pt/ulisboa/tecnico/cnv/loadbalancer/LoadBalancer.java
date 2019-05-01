@@ -66,22 +66,27 @@ public class LoadBalancer {
 		public void handle(final HttpExchange t) throws IOException {
 			// create request object
 			Request request = RequestBuilder.fromQuery(t.getRequestURI().getQuery());
-			estimateRequestComplexity(request);
+			//estimateRequestComplexity(request);
 
 			// select an instance to send this request to and get it's ip
 			String ip = "";
 			if(isTestingLocally){
 				ip = "localhost";
 			}else{
+				System.out.println("selecting instance for request");
 				Instance instance = selectInstanceForRequest(request);
+				System.out.println("selected instance");
 				ip = instance.getPrivateIpAddress();
+				System.out.println("ip=" + ip);
 
 				// store request in the hashmap for this instance
-				storeRequest(request, instance);
+				//storeRequest(request, instance);
+				System.out.println("storing request");
 			}
 
 			//String ip = "localhost";
 			String redirectUrl = buildRedirectUrl(ip, 8080);
+			System.out.println("redirecting to " + redirectUrl);
 
 			BufferedImage bufferedImage = doGET(redirectUrl, t.getRequestURI().getQuery().toString());
 			int imageSize = getBufferedImageSize(bufferedImage);
@@ -107,7 +112,9 @@ public class LoadBalancer {
 	 * @return instance
 	 */
 	private static Instance selectInstanceForRequest(Request request){
-		Instance instance = getInstanceLowestEstimatedTimeComplexity();
+	// temporarily disabled due to aws problem?	
+		//Instance instance = getInstanceLowestEstimatedTimeComplexity();
+		Instance instance = instanceManager.getWorkerInstances().iterator().next();
 
 		return instance;
 	}
