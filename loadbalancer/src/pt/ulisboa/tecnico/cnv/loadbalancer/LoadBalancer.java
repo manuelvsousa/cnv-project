@@ -2,6 +2,10 @@ package pt.ulisboa.tecnico.cnv.loadbalancer;
 
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.util.EC2MetadataUtils;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.internal.LinkedTreeMap;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -93,7 +97,7 @@ public class LoadBalancer {
 			ImageIO.write(bufferedImage, "png", os);
 			os.close();
 
-
+			System.out.println("> Sent response to " + t.getRemoteAddress().toString());
 		}
 	}
 
@@ -113,25 +117,27 @@ public class LoadBalancer {
 		// get metrics of similar requests and estimate complexity of this request
 
 		// testing
+		List<JsonObject> metrics = new ArrayList<>();
 		try {
-			mssClient.getMetrics(request.getSearchAlgorithm().toString(), request.getMapSize().getWidth());
+			metrics = mssClient.getMetrics(request.getSearchAlgorithm().toString(), request.getMapSize().getWidth());
+			JsonObject jsonObject = (new Gson()).toJsonTree(metrics.get(0)).getAsJsonObject();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
 
-		List<Object> metrics = null; // = mssClient.getMetrics(request.getSearchAlgorithm().toString(), request.getMapSize().getWidth());
 		int estimatedTimeComplexity, estimatedSpaceComplexity;
 		int timeSum=0, spaceSum=0;
 		for(int i = 0; i < metrics.size(); i++){
-		//	timeSum += metrics.get(i).getTimeComplexity();
-		//	spaceSum += metrics.get(i).getSpaceComplexity();
+			timeSum += metrics.get(i).get("TimeComplexity").getAsInt();
+			spaceSum += metrics.get(i).get("SpaceComplexity").getAsInt();
 		}
 		estimatedTimeComplexity = timeSum/metrics.size();
 		estimatedSpaceComplexity = spaceSum/metrics.size();
 
 		request.setEstimatedTimeComplexity(estimatedTimeComplexity);
 		request.setEstimatedSpaceComplexity(estimatedSpaceComplexity);
+
 	}
 
 
