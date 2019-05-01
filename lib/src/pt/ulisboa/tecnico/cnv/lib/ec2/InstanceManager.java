@@ -58,8 +58,24 @@ public class InstanceManager {
 		}
 	}
 
+	/**
+	 * Gets a set of all the worker instances, that is, webservers capable of processing requests
+	 * @return
+	 */
+	public Set<Instance> getWorkerInstances(){
+		Set<Instance> workerInstances = new HashSet<>();
+		for(Instance instance : getInstances()){
+			if(getTagNameOfInstance(instance).equals(WORKER_INSTANCE_NAME)){
+				workerInstances.add(instance);
+			}
+		}
+		return workerInstances;
+	}
 
-
+	/**
+	 * Get all instances
+	 * @return
+	 */
 	public Set<Instance> getInstances(){
 		Set<Instance> instances = new HashSet<Instance>();
 		DescribeInstancesResult describeInstancesResult = ec2.describeInstances();
