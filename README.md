@@ -23,26 +23,37 @@ Note that the sdk directory should have the folders `aws-java-sdk-<version>/lib`
 and `aws-java-sdk-<version>/third-party/lib` as provided by the downloaded and unzipped sdk from amazon.
 This path must not contain an ending '/' character.
 
+For example:
+`bash compile.sh ../aws-java-sdk-1.11.534`
+
 
 ##### Running
 
-To run the webserver run in terminal:
+First run the MSS:
+
+```
+bash run_mss_server.sh <path_to_AWS_SDK_directory>
+```
+
+Second, run one or more web servers, each in a separate ec2 instance by running the following command
+on each one:
 
 ```
 bash run_server.sh <path_to_AWS_SDK_directory>
 ```
 
-For the loadbalancer:
+Third, run the loadbalancer like so:
 
 ```
 bash run_loadbalancer.sh <path_to_AWS_SDK_directory>
 ```
 
-For the mss:
 
-```
-bash run_mss_server.sh <path_to_AWS_SDK_directory>
-```
+##### Testing locally
+
+It is possible to test the system locally, by altering each run script to pass the command line argument `-localhost` 
+to the java command.
+
 
 ### BitTool
 
