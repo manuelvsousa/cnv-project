@@ -25,14 +25,26 @@ public class LoadBalancer {
 	private static MSSClient mssClient;
 	private static int mssPort = 8001;
 
+	private static boolean isTestingLocally = false;
+
 	public static void main(final String[] args) throws Exception {
 		final HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
 
+		// if testing on single machine use localhost ip's
+		if(args.length == 1 && args[0].equals("-localhost")){
+			isTestingLocally = true;
+		}
+
 		// find mss server ip and create the client
-		Instance mssInstance = instanceManager.getMSSInstance();
-		String mssIp = mssInstance.getPrivateIpAddress();
-		mssClient = new MSSClient(mssIp, mssPort);
-		System.out.println("Created MSS client talking to server at: " + mssIp +":" + mssPort);
+		if(isTestingLocally){
+			mssClient = new MSSClient("localhost", mssPort);
+			System.out.println("Running Loadbalancer locally. Created MSS client talking to localhost:"+mssPort);
+		}else{
+			Instance mssInstance = instanceManager.getMSSInstance();
+			String mssIp = mssInstance.getPrivateIpAddress();
+			mssClient = new MSSClient(mssIp, mssPort);
+			System.out.println("Created MSS client talking to server at: " + mssIp +":" + mssPort);
+		}
 
 		server.createContext("/climb", new ClimbHandler());
 		server.createContext("/requestFinishedProcessing", new PostMetricDataHandler());
@@ -57,11 +69,16 @@ public class LoadBalancer {
 			estimateRequestComplexity(request);
 
 			// select an instance to send this request to and get it's ip
-			Instance instance = selectInstanceForRequest(request);
-			String ip = instance.getPrivateIpAddress();
+			String ip = "";
+			if(isTestingLocally){
+				ip = "localhost";
+			}else{
+				Instance instance = selectInstanceForRequest(request);
+				ip = instance.getPrivateIpAddress();
 
-			// store request in the hashmap for this instance
-			storeRequest(request, instance);
+				// store request in the hashmap for this instance
+				storeRequest(request, instance);
+			}
 
 			//String ip = "localhost";
 			String redirectUrl = buildRedirectUrl(ip, 8080);
@@ -94,6 +111,7 @@ public class LoadBalancer {
 
 		return instance;
 	}
+
 
 	public static void estimateRequestComplexity(Request request){
 		// get metrics of similar requests and estimate complexity of this request

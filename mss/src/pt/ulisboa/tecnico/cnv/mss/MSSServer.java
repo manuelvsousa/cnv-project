@@ -15,6 +15,8 @@ public class MSSServer {
     private int PORT = 8001;
     private MSSDynamo mssDynamo;
 
+    private static boolean isTestingLocally = false;
+
     private MSSServer() throws Exception {
         this.mssDynamo = new MSSDynamo();
     }
@@ -22,10 +24,15 @@ public class MSSServer {
     public static void main(String[] args) throws Exception {
         MSSServer.getInstance().startServer();
 
-        // clear previous tags and set loadbalancer tag for instance identification
-        Instance instance = instanceManager.getInstanceById(EC2MetadataUtils.getInstanceId());
-        instanceManager.clearInstanceTags(instance);
-        instanceManager.tagInstanceAsMSS(instance);
+        // if testing on single machine use localhost ip's
+        if(args.length == 1 && args[0].equals("-localhost")){
+            isTestingLocally = true;
+        }else{
+            // clear previous tags and set loadbalancer tag for instance identification
+            Instance instance = instanceManager.getInstanceById(EC2MetadataUtils.getInstanceId());
+            instanceManager.clearInstanceTags(instance);
+            instanceManager.tagInstanceAsMSS(instance);
+        }
     }
 
     public static MSSServer getInstance() throws Exception {
