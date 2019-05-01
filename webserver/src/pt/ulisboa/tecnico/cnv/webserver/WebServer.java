@@ -24,6 +24,7 @@ public class WebServer {
 
 		if(args.length == 1 && args[0].equals("-localhost")){
 			isTestingLocally = true;
+			System.out.println("Running webserver locally");
 		}else{
 			// clear previous tags and set loadbalancer tag for instance identification
 			Instance instance = instanceManager.getInstanceById(EC2MetadataUtils.getInstanceId());

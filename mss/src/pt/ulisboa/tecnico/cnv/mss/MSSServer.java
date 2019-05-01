@@ -27,6 +27,7 @@ public class MSSServer {
         // if testing on single machine use localhost ip's
         if(args.length == 1 && args[0].equals("-localhost")){
             isTestingLocally = true;
+            System.out.println("Running MSSServer on localhost.");
         }else{
             // clear previous tags and set loadbalancer tag for instance identification
             Instance instance = instanceManager.getInstanceById(EC2MetadataUtils.getInstanceId());

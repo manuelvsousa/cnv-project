@@ -33,12 +33,8 @@ public class LoadBalancer {
 		// if testing on single machine use localhost ip's
 		if(args.length == 1 && args[0].equals("-localhost")){
 			isTestingLocally = true;
-		}
-
-		// find mss server ip and create the client
-		if(isTestingLocally){
+			System.out.println("Running Loadbalancer on localhost.");
 			mssClient = new MSSClient("localhost", mssPort);
-			System.out.println("Running Loadbalancer locally. Created MSS client talking to localhost:"+mssPort);
 		}else{
 			Instance mssInstance = instanceManager.getMSSInstance();
 			String mssIp = mssInstance.getPrivateIpAddress();
