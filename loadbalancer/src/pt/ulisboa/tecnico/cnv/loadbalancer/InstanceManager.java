@@ -15,6 +15,7 @@ import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Reservation;
+import com.amazonaws.services.ec2.model.Tag;
 
 import java.util.*;
 
@@ -61,9 +62,64 @@ public class InstanceManager {
 		List<Reservation> reservations = describeInstancesResult.getReservations();
 		for (Reservation reservation : reservations) {
 			instances.addAll(reservation.getInstances());
+
 		}
+
 		return instances;
 	}
+
+	public String getTagNameOfInstance(Instance instance){
+		List<Tag> tags = instance.getTags();
+		if(tags.size() > 0){
+			for(Tag tag : tags){
+				if(tag.getKey().equals("name")){
+					return tag.getValue();
+				}
+			}
+		}
+		return "";
+	}
+
+	/**
+	 * Find the instance with the tag mss
+	 * @return
+	 */
+	public Instance getMSSInstance(){
+		return findInstanceByTag("mss");
+	}
+
+	/**
+	 * Find instance with tag loadbalancer
+	 * @return
+	 */
+	public Instance getLoadBalancerInstance(){
+		return findInstanceByTag("loadbalancer");
+	}
+
+
+	/**
+	 * Find an instance by a tag name, indicating for example if it is the mss
+	 * @return
+	 */
+	private Instance findInstanceByTag(String tagValue){
+		Set<Instance> instances = getInstances();
+		for(Instance instance : instances){
+			List<Tag> tags = instance.getTags();
+
+			// does instance have tags?
+			if(tags.size() > 0 ){
+
+				// does instance have a tag with value tagValue?
+				for(Tag tag : tags){
+					if(tag.getValue().equals(tagValue)){
+						return instance;
+					}
+				}
+			}
+		}
+		return null;
+	}
+
 
 	public AmazonEC2 getEc2(){
 		return ec2;

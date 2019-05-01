@@ -1,6 +1,7 @@
 package pt.ulisboa.tecnico.cnv.loadbalancer;
 
 import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ec2.model.Tag;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -33,8 +34,15 @@ public class LoadBalancer {
 		server.setExecutor(Executors.newCachedThreadPool());
 		server.start();
 
+		Instance instance = instanceManager.getMSSInstance();
+		String tag = instanceManager.getTagNameOfInstance(instance);
+		System.out.println("Tag: " + tag);
+
 		System.out.println(server.getAddress().toString());
 	}
+
+
+
 
 	static class ClimbHandler implements HttpHandler {
 		public void handle(final HttpExchange t) throws IOException {
