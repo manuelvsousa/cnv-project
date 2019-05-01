@@ -22,7 +22,7 @@ public class SinusoidalStrategy extends AbstractGeneratorStrategy {
         for (int x = 0; x < gen.getWidth(); x++)
         {
             // Iterating the horizontal coordinates is represented by iterating the
-            // angle from 0º to 360º in a circle.
+            // angle from 0 to 360 in a circle.
             sX = 2 * Math.PI * (x / (double) gen.getWidth()); // 0 < sX < 2 * Pi
             for (int y = 0; y < gen.getHeight(); y++)
             {
