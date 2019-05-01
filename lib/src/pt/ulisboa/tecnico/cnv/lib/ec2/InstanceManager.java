@@ -1,9 +1,10 @@
-package pt.ulisboa.tecnico.cnv.loadbalancer;
+package pt.ulisboa.tecnico.cnv.lib.ec2;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.services.cloudtrail.model.RemoveTagsRequest;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder;
 import com.amazonaws.services.cloudwatch.model.Datapoint;
@@ -12,14 +13,15 @@ import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
-import com.amazonaws.services.ec2.model.DescribeInstancesResult;
-import com.amazonaws.services.ec2.model.Instance;
-import com.amazonaws.services.ec2.model.Reservation;
-import com.amazonaws.services.ec2.model.Tag;
+import com.amazonaws.services.ec2.model.*;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 
 import java.util.*;
 
 public class InstanceManager {
+	private static final String MSS_INSTANCE_NAME = "mss";
+	private static final String LOADBALANCER_INSTANCE_NAME = "loadbalancer";
+	private static final String WORKER_INSTANCE_NAME = "worker";
 	private AmazonEC2      ec2;
 	private AmazonCloudWatch cloudWatch;
 
@@ -56,6 +58,8 @@ public class InstanceManager {
 		}
 	}
 
+
+
 	public Set<Instance> getInstances(){
 		Set<Instance> instances = new HashSet<Instance>();
 		DescribeInstancesResult describeInstancesResult = ec2.describeInstances();
@@ -68,11 +72,21 @@ public class InstanceManager {
 		return instances;
 	}
 
+	public Instance getInstanceById(String instanceId){
+		Set<Instance> instances = getInstances();
+		for(Instance instance : instances){
+			if(instance.getInstanceId().equals(instanceId)){
+				return instance;
+			}
+		}
+		return null;
+	}
+
 	public String getTagNameOfInstance(Instance instance){
 		List<Tag> tags = instance.getTags();
 		if(tags.size() > 0){
 			for(Tag tag : tags){
-				if(tag.getKey().equals("name")){
+				if(tag.getKey().equals("Name")){
 					return tag.getValue();
 				}
 			}
@@ -80,12 +94,48 @@ public class InstanceManager {
 		return "";
 	}
 
+	public void tagInstanceAsMSS(Instance instance){
+		setInstanceName(instance, MSS_INSTANCE_NAME);
+	}
+
+	public void tagInstanceAsLoadBalancer(Instance instance){
+		setInstanceName(instance, LOADBALANCER_INSTANCE_NAME);
+	}
+
+	public void tagInstanceAsWorker(Instance instance){
+		setInstanceName(instance, WORKER_INSTANCE_NAME);
+	}
+
+	private void setInstanceName(Instance instance, String name){
+		addTagToInstance(instance, "Name", name);
+	}
+
+	public void addTagToInstance(Instance instance, String key, String value){
+		long offsetInMilliseconds = 1000 * 60 * 10;
+		List<Tag> tags = instance.getTags();
+		tags.add(new Tag(key, value));
+		instance.setTags(tags);
+
+		CreateTagsRequest createTagsRequest = new CreateTagsRequest().withTags(tags)
+				.withResources(instance.getInstanceId());
+		ec2.createTags(createTagsRequest);
+	}
+
+	public void clearInstanceTags(Instance instance){
+		DeleteTagsRequest deleteTagsRequest = new DeleteTagsRequest()
+				.withResources(instance.getInstanceId());
+
+		ec2.deleteTags(deleteTagsRequest);
+	}
+
+
+
 	/**
 	 * Find the instance with the tag mss
 	 * @return
 	 */
 	public Instance getMSSInstance(){
-		return findInstanceByTag("mss");
+		return findInstanceByTag(MSS_INSTANCE_NAME);
 	}
 
 	/**
@@ -93,7 +143,7 @@ public class InstanceManager {
 	 * @return
 	 */
 	public Instance getLoadBalancerInstance(){
-		return findInstanceByTag("loadbalancer");
+		return findInstanceByTag(LOADBALANCER_INSTANCE_NAME);
 	}
 
 

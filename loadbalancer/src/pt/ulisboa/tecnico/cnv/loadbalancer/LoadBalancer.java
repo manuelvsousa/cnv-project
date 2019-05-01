@@ -1,11 +1,12 @@
 package pt.ulisboa.tecnico.cnv.loadbalancer;
 
 import com.amazonaws.services.ec2.model.Instance;
-import com.amazonaws.services.ec2.model.Tag;
+import com.amazonaws.util.EC2MetadataUtils;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import pt.ulisboa.tecnico.cnv.lib.ec2.InstanceManager;
 import pt.ulisboa.tecnico.cnv.lib.request.Request;
 import pt.ulisboa.tecnico.cnv.lib.request.RequestBuilder;
 import pt.ulisboa.tecnico.cnv.mssclient.MSSClient;
@@ -34,9 +35,10 @@ public class LoadBalancer {
 		server.setExecutor(Executors.newCachedThreadPool());
 		server.start();
 
-		Instance instance = instanceManager.getMSSInstance();
-		String tag = instanceManager.getTagNameOfInstance(instance);
-		System.out.println("Tag: " + tag);
+		// clear previous tags and set loadbalancer tag for instance identification
+		Instance instance = instanceManager.getInstanceById(EC2MetadataUtils.getInstanceId());
+		instanceManager.clearInstanceTags(instance);
+		instanceManager.tagInstanceAsLoadBalancer(instance);
 
 		System.out.println(server.getAddress().toString());
 	}

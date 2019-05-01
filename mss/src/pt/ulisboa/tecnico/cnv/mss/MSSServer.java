@@ -1,6 +1,9 @@
 package pt.ulisboa.tecnico.cnv.mss;
 
+import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.util.EC2MetadataUtils;
 import com.sun.net.httpserver.HttpServer;
+import pt.ulisboa.tecnico.cnv.lib.ec2.InstanceManager;
 import pt.ulisboa.tecnico.cnv.mss.operations.addMetrics;
 import pt.ulisboa.tecnico.cnv.mss.operations.getMetrics;
 
@@ -8,6 +11,7 @@ import java.net.InetSocketAddress;
 
 public class MSSServer {
     private static MSSServer instance = null;
+    private static InstanceManager instanceManager = new InstanceManager();
     private int PORT = 8001;
     private MSSDynamo mssDynamo;
 
@@ -17,6 +21,11 @@ public class MSSServer {
 
     public static void main(String[] args) throws Exception {
         MSSServer.getInstance().startServer();
+
+        // clear previous tags and set loadbalancer tag for instance identification
+        Instance instance = instanceManager.getInstanceById(EC2MetadataUtils.getInstanceId());
+        instanceManager.clearInstanceTags(instance);
+        instanceManager.tagInstanceAsMSS(instance);
     }
 
     public static MSSServer getInstance() throws Exception {
