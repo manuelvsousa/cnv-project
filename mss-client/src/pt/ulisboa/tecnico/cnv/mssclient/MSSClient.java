@@ -1,6 +1,5 @@
 package pt.ulisboa.tecnico.cnv.mssclient;
 
-import com.amazonaws.AmazonServiceException;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.internal.LinkedTreeMap;
@@ -9,7 +8,6 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-import sun.awt.image.ImageWatched;
 
 import javax.swing.*;
 import java.util.ArrayList;

@@ -28,6 +28,7 @@ public class WebServer {
 		}else{
 			// clear previous tags and set loadbalancer tag for instance identification
 			Instance instance = instanceManager.getInstanceById(EC2MetadataUtils.getInstanceId());
+			System.out.println("instance to clear: "+ instance);
 			instanceManager.clearInstanceTags(instance);
 			instanceManager.tagInstanceAsWorker(instance);
 		}

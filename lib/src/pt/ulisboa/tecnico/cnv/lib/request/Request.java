@@ -19,8 +19,6 @@ public class Request {
         this.mapSize = mapSize;
         this.startingPoint = startingPoint;
     }
-
-
     public SearchAlgorithm getSearchAlgorithm() {
         return searchAlgorithm;
     }

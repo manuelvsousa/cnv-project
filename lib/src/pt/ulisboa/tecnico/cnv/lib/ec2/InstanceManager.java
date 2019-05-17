@@ -201,6 +201,7 @@ public class InstanceManager {
 		try {
 			credentials = new ProfileCredentialsProvider().getCredentials();
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new AmazonClientException(
 					"Cannot load the credentials from the credential profiles file. " +
 							"Please make sure that your credentials file is at the correct " +

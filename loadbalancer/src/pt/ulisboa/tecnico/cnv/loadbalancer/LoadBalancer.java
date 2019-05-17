@@ -28,7 +28,7 @@ public class LoadBalancer {
 	private static InstanceManager instanceManager = new InstanceManager();
 	private static MSSClient mssClient;
 	private static int mssPort = 8001;
-
+		// TODO timeout after x mins
 	private static boolean isTestingLocally = false;
 
 	public static void main(final String[] args) throws Exception {
@@ -47,7 +47,7 @@ public class LoadBalancer {
 		}
 
 		server.createContext("/climb", new ClimbHandler());
-		server.createContext("/requestFinishedProcessing", new PostMetricDataHandler());
+		server.createContext("/requestFinis	hedProcessing", new PostMetricDataHandler());
 
 		// be aware! infinite pool of threads!
 		server.setExecutor(Executors.newCachedThreadPool());

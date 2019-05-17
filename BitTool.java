@@ -16,21 +16,20 @@ import java.io.*;
 import java.util.*;
 
 public class BitTool {
-    /* long[] { time complexity, space complexity} */
-    private static ThreadLocal<long[]> metricData = new ThreadLocal<long[]>() {
+    private static ThreadLocal<long[]> complexity = new ThreadLocal<long[]>() {
         @Override public long[] initialValue(){
-            return new long[] { 0, 0};
+            return new long[] { 0 };
         }
     };
 
     // instruction weights compared to single instruction to summarise metricData of all instructions in a single value
-    private static final int LOAD_STORE_INST_WEIGHT = 15;
+    private static final int LOAD_STORE_INST_WEIGHT = 35;
     private static final int ALLOC_INST_WEIGHT = 25;
-    private static final int CONDITIONAL_INST_WEIGHT = 25;
-    private static final int COMPARISON_INST_WEIGHT = 25;
+    private static final int CONDITIONAL_INST_WEIGHT = 10;
+    private static final int COMPARISON_INST_WEIGHT = 10;
 
     private static PrintStream out = null;
-    private static int[] allocInstrOpcodes = {InstructionTable.NEW, InstructionTable.newarray 
+    private static int[] allocInstrOpcodes = {InstructionTable.NEW, InstructionTable.newarray
         , InstructionTable.anewarray, InstructionTable.multianewarray};
 
     /* main reads in all the files class files present in the input directory,
@@ -104,8 +103,7 @@ public class BitTool {
                 }
             }
 
-            bb.addBefore("BitTool", "incTimeComplexity", totalLoadStoreWeight + totalConditionalWeight + totalComparisonWeight + bb.size());
-            bb.addBefore("BitTool", "incSpaceComplexity", totalAllocWeight);
+            bb.addBefore("BitTool", "incComplexity", totalLoadStoreWeight + totalConditionalWeight + totalComparisonWeight + bb.size() + totalAllocWeight);
             totalLoadStoreWeight = 0;
             totalAllocWeight = 0;
         }
@@ -151,21 +149,25 @@ public class BitTool {
     //////////////// Added methods to bytecode ///////////
 
     public static synchronized void sendMetricData(String className) {
+        Request request = WebServerHandler.request.get();
+        String searchAlgo = request.getSearchAlgorithm().toString();
+        String mapSize = request.getMapSize().getWidth()+"_"+request.getMapSize().getHeight();
+
         try{
-            PrintWriter writer = new PrintWriter("bitToolOutput.txt", "UTF-8");
-            writer.println("Time Complexity: " + metricData.get()[0]);
-            writer.println("Space Complexity: " + metricData.get()[1]);
+            PrintWriter writer = new PrintWriter("bitToolOutput_"+searchAlgo+"_"+mapSize+".txt", "UTF-8");
+            writer.println("Complexity: " + complexity.get()[0]);
+            writer.println("Search algorithm: " + WebServerHandler.request.get().getSearchAlgorithm());
             writer.close();
+
+            complexity.get()[0]=0;
         }catch(Exception e){
             e.printStackTrace();
         }
+
     }
 
-    public static synchronized void incTimeComplexity(int weight){
-        metricData.get()[0] += weight;
-    }
-    public static synchronized void incSpaceComplexity(int weight){
-        metricData.get()[1] += weight;
+    public static synchronized void incComplexity(int weight){
+        complexity.get()[0] += weight;
     }
 
 
