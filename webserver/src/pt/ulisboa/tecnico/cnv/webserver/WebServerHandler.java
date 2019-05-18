@@ -22,6 +22,7 @@ import java.nio.file.Paths;
 public class WebServerHandler implements HttpHandler {
     public static ThreadLocal<Request> request = new ThreadLocal<Request>();
     public void handle(final HttpExchange t) throws IOException {
+        WebServer.requestCount++;
 
         // Get the query.
         final String query = t.getRequestURI().getQuery();
@@ -67,6 +68,8 @@ public class WebServerHandler implements HttpHandler {
         Files.copy(responseFile.toPath(), os);
 
         os.close();
+
+        WebServer.requestCount--;
 
         System.out.println("> Sent response to " + t.getRemoteAddress().toString());
     }

@@ -12,6 +12,6 @@ mkdir build
 export _JAVA_OPTIONS="-XX:-UseSplitVerifier "$_JAVA_OPTIONS
 javac -cp $CP $(find . -name "*.java") -d build
 java -cp build BitTool build/pt/ulisboa/tecnico/cnv/hillclimber/solver build/pt/ulisboa/tecnico/cnv/hillclimber/solver
-#java -cp build pt.ulisboa.tecnico.cnv.webserver.DynamicTool build/pt/ulisboa/tecnico/cnv/solver build/pt/ulisboa/tecnico/cnv/solver
+
 
 

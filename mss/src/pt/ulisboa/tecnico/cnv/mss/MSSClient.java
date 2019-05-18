@@ -1,6 +1,7 @@
 package pt.ulisboa.tecnico.cnv.mss;
 
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
+import pt.ulisboa.tecnico.cnv.lib.request.Request;
 
 
 public class MSSClient {
@@ -12,7 +13,7 @@ public class MSSClient {
     }
 
     public static void main(String[] args)  {
-        MSSClient.getInstance().addMetrics("1.1.1.1","BFS",123,123,123,123,123);
+        MSSClient.getInstance().addMetrics("BFS",123,123,123);
         MSSClient.getInstance().getMetrics(123);
     }
 
@@ -26,20 +27,19 @@ public class MSSClient {
         }
         return instance;
     }
-    public void addMetrics(String ip, String algorithm, int mapWidth, int startX, int startY, int timeComplexity, int spaceComplexity) {
-        mssDynamo.addItem(ip,
-                algorithm,
-                mapWidth,
-                startX,
-                startY,
-                timeComplexity,
-                spaceComplexity);
 
+    public void addMetrics(String algorithm, int startX, int startY, long timeComplexity) {
+        mssDynamo.addItem(algorithm, startX, startY, timeComplexity);
     }
 
-    public void getMetrics(int id) {
+    public String getMetrics(int id) {
         ScanResult scanResult = mssDynamo.search(id);
-        System.out.println(scanResult.getItems().toString());
+        return scanResult.getItems().toString();
+    }
+
+    public String getMetrics(Request.SearchAlgorithm searchAlgorithm) {
+        ScanResult scanResult = mssDynamo.search(searchAlgorithm.toString());
+        return scanResult.getItems().toString();
     }
 
 
