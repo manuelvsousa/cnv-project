@@ -10,7 +10,9 @@ import BIT.lowBIT.Method_Info;
 import pt.ulisboa.tecnico.cnv.webserver.WebServer;
 import pt.ulisboa.tecnico.cnv.webserver.WebServerHandler;
 import pt.ulisboa.tecnico.cnv.lib.request.Request;
-import pt.ulisboa.tecnico.cnv.lib.request.RequestMetricData;
+import pt.ulisboa.tecnico.cnv.lib.http.HttpUtil;
+
+import com.amazonaws.services.ec2.model.Instance;
 
 import java.io.*;
 import java.util.*;
@@ -30,12 +32,12 @@ public class BitTool {
      * the measured complexity so far, triggers an update progress call, informing the loadbalancer
      * of an estimated progress status of this request.
      */
-    private static ThreadLocal<long[]> progressMarkers = new ThreadLocal<long[]>{
+    private static ThreadLocal<long[]> progressMarkers = new ThreadLocal<long[]>() {
         @Override public long[] initialValue(){
-            return new long[NUM_PROGRESS_MARKERS] {}
+            return new long[NUM_PROGRESS_MARKERS];
         }
-    }
-    private static ThreadLocal<Integer> currentProgressMarker = new ThreadLocal<Integer>{
+    };
+    private static ThreadLocal<Integer> currentProgressMarker = new ThreadLocal<Integer> (){
         @Override public Integer initialValue(){
             return new Integer(0);
         }
@@ -109,7 +111,7 @@ public class BitTool {
      * Initialize progress markers when solving starts, when we have the request
      */
     public static void addInitProgressMarkersCall(Routine routine, ClassInfo ci){
-        routine.addBefore("BitTool", initProgressMarkers(ci));
+        routine.addBefore("BitTool", "initProgressMarkers", ci.getClassName());
     }
 
     // Adds LOAD, STORE, ALLOC metric calls to the end of the routine's basic blocks
@@ -204,12 +206,12 @@ public class BitTool {
      */
     public static synchronized void tryUpdateProgress(String className){
         Request request = WebServerHandler.request.get();
-        if(request.getEstimatedComplexity() != 0 ){
-            int measuredComplexitySoFar = complexity.get()[0];
+        if(request != null && request.getEstimatedComplexity() != 0 ){
+            long measuredComplexitySoFar = complexity.get()[0];
             if(measuredComplexitySoFar > progressMarkers.get()[currentProgressMarker.get()+1]){
-                currentProgressMarker.get() = new Integer(currentProgressMarker.get()+1);
+                currentProgressMarker.set(new Integer(currentProgressMarker.get()+1));
                 double progressPercentage = ((double) 1 / NUM_PROGRESS_MARKERS) * currentProgressMarker.get();
-                request.setProgress((progressPercentage);
+                request.setProgress(progressPercentage);
                 updateLoadBalancerOnProgress(className);
             }
         }
@@ -222,16 +224,15 @@ public class BitTool {
     public static synchronized void sendMetricData(String className) {
         Request request = WebServerHandler.request.get();
         String searchAlgo = request.getSearchAlgorithm().toString();
-        String mapSize = request.getMapSize().getWidth()+"_"+request.getMapSize().getHeight();
         // set measured complexity and mark request as finished (progress=1)
         request.setMeasuredComplexity(complexity.get()[0]);
         request.setProgress(1);
-        currentProgressMarker = new Integer(0);
+        currentProgressMarker.set(new Integer(0));
 
         updateLoadBalancerOnProgress(className);
 
         try{
-            PrintWriter writer = new PrintWriter("bitToolOutput_"+searchAlgo+"_"+mapSize+".txt", "UTF-8");
+            PrintWriter writer = new PrintWriter("bitToolOutput_"+searchAlgo+".txt", "UTF-8");
             writer.println("Complexity: " + complexity.get()[0]);
             writer.println("Search algorithm: " + WebServerHandler.request.get().getSearchAlgorithm());
             writer.close();
@@ -252,19 +253,27 @@ public class BitTool {
             String ip = instance.getPrivateIpAddress();
             String targetUrl = HttpUtil.buildUrl(ip, 8000);
             String urlParams = request.getQuery()+"&reqid="+request.getId()+
-                    "&instanceId="+instance.getInstanceId()+"&progress="+request.getProgress());
-            URL url = new URL(targetUrl);
+                    "&instanceId="+instance.getInstanceId()+"&progress="+request.getProgress();
 
-            HttpUrlConnection con = (HttpUrlConnection) url.openConnection();
-            con.setRequestMethod("POST");
+            try{
+                URL url = new URL(targetUrl);
 
-            con.setDoOutput(true);
-            DataOutputStream dataOutputStream = new DataOutputStream(con.getOutputStream());
-            dataOutputStream.writeBytes(urlParams);
-            dataOutputStream.flush();
-            dataOutputStream.close();
+                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                con.setRequestMethod("POST");
 
-            int responseCode = con.getResponseCode();
+                con.setDoOutput(true);
+                DataOutputStream dataOutputStream = new DataOutputStream(con.getOutputStream());
+                dataOutputStream.writeBytes(urlParams);
+                dataOutputStream.flush();
+                dataOutputStream.close();
+
+                int responseCode = con.getResponseCode();
+            }catch(MalformedURLException e){
+                e.printStackTrace();
+            }catch(IOException e){
+                e.printStackTrace();
+            }
+
         }
     }
 

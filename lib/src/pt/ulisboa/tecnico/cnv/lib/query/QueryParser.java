@@ -42,9 +42,7 @@ public class QueryParser {
                 this.requestId = Integer.parseInt(splitParam[1]);
             }else if(splitParam[0].equals("instanceId")){
                 this.instanceId = splitParam[1];
-            }
-
-            else{
+            }else{
                 newArgs.add("-" + splitParam[0]);
                 newArgs.add(splitParam[1]);
             }

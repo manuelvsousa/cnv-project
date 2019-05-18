@@ -19,7 +19,7 @@ public class Request {
     private int estimatedComplexity;
 
     // measured from executing the request through instrumentation
-    private int measuredComplexity;
+    private long measuredComplexity;
 
     public Request(){
         this.id = ID_COUNTER;
@@ -91,11 +91,11 @@ public class Request {
         return progress;
     }
 
-    public int getMeasuredComplexity() {
+    public long getMeasuredComplexity() {
         return measuredComplexity;
     }
 
-    public void setMeasuredComplexity(int measuredComplexity) {
+    public void setMeasuredComplexity(long measuredComplexity) {
         this.measuredComplexity = measuredComplexity;
     }
 

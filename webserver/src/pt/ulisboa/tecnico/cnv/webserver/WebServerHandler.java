@@ -19,7 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class WebServerRequestHandler implements HttpHandler {
+public class WebServerHandler implements HttpHandler {
     public static ThreadLocal<Request> request = new ThreadLocal<Request>();
     public void handle(final HttpExchange t) throws IOException {
         WebServer.requestCount++;

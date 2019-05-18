@@ -10,6 +10,7 @@ import pt.ulisboa.tecnico.cnv.lib.ec2.InstanceManager;
 import pt.ulisboa.tecnico.cnv.lib.http.HttpUtil;
 import pt.ulisboa.tecnico.cnv.lib.query.QueryParser;
 import pt.ulisboa.tecnico.cnv.lib.request.Request;
+import pt.ulisboa.tecnico.cnv.mss.MSSClient;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -29,16 +30,6 @@ public class LoadBalancer {
 	public static void main(final String[] args) throws Exception {
 		final HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
 
-		// if testing on single machine use localhost ip's
-		if(args.length == 1 && args[0].equals("-localhost")){
-			isTestingLocally = true;
-			System.out.println("Running Loadbalancer on localhost.");
-		}else{
-			Instance mssInstance = instanceManager.getMSSInstance();
-			String mssIp = mssInstance.getPrivateIpAddress();
-			System.out.println("Created MSS client talking to server at: " + mssIp +":" + mssPort);
-		}
-
 		server.createContext("/climb", new ClimbHandler());
 		server.createContext("/requestStatus", new RequestStatusHandler());
 
@@ -46,10 +37,16 @@ public class LoadBalancer {
 		server.setExecutor(Executors.newCachedThreadPool());
 		server.start();
 
-		// clear previous tags and set loadbalancer tag for instance identification
-		Instance instance = instanceManager.getInstanceById(EC2MetadataUtils.getInstanceId());
-		instanceManager.clearInstanceTags(instance);
-		instanceManager.tagInstanceAsLoadBalancer(instance);
+		// if testing on single machine use localhost ip's
+		if(args.length == 1 && args[0].equals("-localhost")){
+			isTestingLocally = true;
+			System.out.println("Running Loadbalancer on localhost.");
+		}else{
+			// clear previous tags and set loadbalancer tag for instance identification
+			Instance instance = instanceManager.getInstanceById(EC2MetadataUtils.getInstanceId());
+			instanceManager.clearInstanceTags(instance);
+			instanceManager.tagInstanceAsLoadBalancer(instance);
+		}
 
 		System.out.println(server.getAddress().toString());
 	}
@@ -119,9 +116,12 @@ public class LoadBalancer {
 				// remove from runing requests
 				removeRequestById(request, instance);
 
-				// TODO send to MSS
-
-
+				MSSClient.getInstance().addMetrics(
+						request.getSearchAlgorithm().toString(),
+						request.getStartingPoint().getX(),
+						request.getStartingPoint().getY(),
+						request.getMeasuredComplexity()
+				);
 			}else{
 				// replace current request to have progress updated for loadbalancing decisions
 				updateRequestById(request, instance);
@@ -160,8 +160,12 @@ public class LoadBalancer {
 
 	public static int calculateComplexityEstimate(Request request){
 		// get metrics of similar requests and estimate complexity of this request
-		// TODO get recently ran requests through MSS with same algorithm and dataset
 		List<Request> recentRequests = new ArrayList<>();
+		String metrics = MSSClient.getInstance().getMetrics(request.getSearchAlgorithm());
+		// TODO test format of metrics and create a list of requests from them
+		// TODO requires aws instances
+
+
 		if(recentRequests.size() == 0) return 0;
 		int complexitySum = 0;
 		for(Request req : recentRequests){
@@ -169,6 +173,10 @@ public class LoadBalancer {
 		}
 		// average out
 		return complexitySum / recentRequests.size();
+	}
+
+	private static List<Request> getSimilarRecentRequests(Request.SearchAlgorithm search, String dataset){
+		return null; // TODO
 	}
 
 	private static void storeRequest(Request request, Instance instance){
@@ -221,10 +229,6 @@ public class LoadBalancer {
 		try {
 			URL url = new URL(targetUrl + "?" + urlParameters);
 			image = ImageIO.read(url);
-
-			// TESTING
-			URLConnection connection = url.openConnection();
-			connection.connect();;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
