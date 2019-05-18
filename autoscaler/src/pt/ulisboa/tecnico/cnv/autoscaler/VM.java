@@ -145,13 +145,13 @@ public class VM {
     }
 
 
-    public void getStatistics(){
+    public Double getCPUUsage(){
         long offsetInMilliseconds = 1000 * 60 * 10;
         Dimension instanceDimension = new Dimension();
         instanceDimension.setName("InstanceId");
         List<Dimension> dims = new ArrayList<>();
         dims.add(instanceDimension);
-        String name = instance.getInstanceId();
+        String name = this.instance.getInstanceId();
         if (getInstanceStatus(getID()) == RUNNING) {
             System.out.println("running instance id = " + name);
             instanceDimension.setValue(name);
@@ -168,10 +168,10 @@ public class VM {
             List<Datapoint> datapoints = getMetricStatisticsResult.getDatapoints();
             System.out.println(datapoints.toString());
             for (Datapoint dp : datapoints) {
-                System.out.println(" CPU utilization for instance " + name +
-                        " = " + dp.getAverage());
+                return dp.getAverage();
             }
         }
+        return -1.0;
     }
 
 }

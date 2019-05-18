@@ -73,9 +73,9 @@ public class EC2LaunchMeasureCPU {
                             "location (~/.aws/credentials), and is in valid format.",
                     e);
         }
-        ec2 = AmazonEC2ClientBuilder.standard().withRegion("eu-west-1").withCredentials(new AWSStaticCredentialsProvider(credentials)).build();
+        ec2 = AmazonEC2ClientBuilder.standard().withRegion("us-east-1").withCredentials(new AWSStaticCredentialsProvider(credentials)).build();
 
-        cloudWatch = AmazonCloudWatchClientBuilder.standard().withRegion("eu-west-1").withCredentials(new AWSStaticCredentialsProvider(credentials)).build();
+        cloudWatch = AmazonCloudWatchClientBuilder.standard().withRegion("us-east-1").withCredentials(new AWSStaticCredentialsProvider(credentials)).build();
     }
 
 
@@ -107,12 +107,12 @@ public class EC2LaunchMeasureCPU {
                 RunInstancesRequest runInstancesRequest =
                         new RunInstancesRequest();
 
-                runInstancesRequest.withImageId("ami-a0e9d7c6")
+                runInstancesRequest.withImageId("ami-0a79624df0814a698")
                         .withInstanceType("t2.micro")
                         .withMinCount(1)
                         .withMaxCount(1)
-                        .withKeyName("jog-aws")
-                        .withSecurityGroups("ssh+http8000");
+                        .withKeyName("mvs-aws")
+                        .withSecurityGroups("CVN-ssh+http");
 
                 RunInstancesResult runInstancesResult =
                         ec2.runInstances(runInstancesRequest);

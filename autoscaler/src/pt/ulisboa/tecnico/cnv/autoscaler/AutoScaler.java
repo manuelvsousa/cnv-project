@@ -10,9 +10,8 @@ public class AutoScaler {
     public static void main(String[] args) throws  Exception{
         VM asd = new VM();
         asd.launchVM();
-        asd.getStatistics();
-        Thread.sleep(40000);
-        asd.getStatistics();
+        Thread.sleep(90000);
+        asd.getCPUUsage();
         asd.terminate();
     }
 
