@@ -177,7 +177,7 @@ public class BitTool {
 
     public static synchronized void updateLoadBalancerOnProgress(Request request){
         if(request.getProgress() != 1 && request.getEstimatedComplexity() != 0){
-            Instance instance = WebServer.instanceManager.getMSSInstance();
+            Instance instance = WebServer.instanceManager.getLoadBalancerInstance();
             String ip = instance.getPrivateIpAddress();
             String targetUrl = HttpUtil.buildUrl(ip, 8000);
             String urlParams = request.getQuery()+"&reqid="+request.getId()+
