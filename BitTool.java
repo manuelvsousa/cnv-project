@@ -16,9 +16,28 @@ import java.io.*;
 import java.util.*;
 
 public class BitTool {
+    public static final int NUM_PROGRESS_MARKERS = 4;
+
     private static ThreadLocal<long[]> complexity = new ThreadLocal<long[]>() {
         @Override public long[] initialValue(){
             return new long[] { 0 };
+        }
+    };
+
+    /**
+     * Contains a set of values calculated based on the estimated complexity by the loadbalancer
+     * Each value is a complexity value, that during execution of a request, if said value is exceeded by
+     * the measured complexity so far, triggers an update progress call, informing the loadbalancer
+     * of an estimated progress status of this request.
+     */
+    private static ThreadLocal<long[]> progressMarkers = new ThreadLocal<long[]>{
+        @Override public long[] initialValue(){
+            return new long[NUM_PROGRESS_MARKERS] {}
+        }
+    }
+    private static ThreadLocal<Integer> currentProgressMarker = new ThreadLocal<Integer>{
+        @Override public Integer initialValue(){
+            return new Integer(0);
         }
     };
 
@@ -61,10 +80,14 @@ public class BitTool {
                         if(isSolveImageRoutine(routine)){
                             // add output metrics method call first
                             addMetricOutputOnSolveImageCall(routine, ci);
+                            addInitProgressMarkersCall(routine, ci);
                         }
 
                         // LOAD, STORE, ALLOC, CONDITIONAL + # instructions
                         addInstructionMetricsToRoutine(routine, ci);
+
+                        // check for progress and update loadbalancer if needed
+                        addProgressUpdateCallAfterRoutine(routine, ci);
                     }
 
                     ci.write(argv[1] + System.getProperty("file.separator") + infilename);
@@ -75,11 +98,19 @@ public class BitTool {
 
     ////////// Add metric call methods /////////////////
 
-
+    /**
+     * Call sendMetricData when solving finishes
+     */
     public static void addMetricOutputOnSolveImageCall(Routine routine, ClassInfo ci){
         routine.addAfter("BitTool", "sendMetricData", ci.getClassName());
     }
 
+    /**
+     * Initialize progress markers when solving starts, when we have the request
+     */
+    public static void addInitProgressMarkersCall(Routine routine, ClassInfo ci){
+        routine.addBefore("BitTool", initProgressMarkers(ci));
+    }
 
     // Adds LOAD, STORE, ALLOC metric calls to the end of the routine's basic blocks
     public static void addInstructionMetricsToRoutine(Routine routine, ClassInfo ci){
@@ -107,6 +138,10 @@ public class BitTool {
             totalLoadStoreWeight = 0;
             totalAllocWeight = 0;
         }
+    }
+
+    public static void addProgressUpdateCallAfterRoutine(Routine routine, ClassInfo ci){
+        routine.addAfter("BitTool", "tryUpdateProgress", ci.getClassName());
     }
 
 
@@ -147,11 +182,43 @@ public class BitTool {
     }
 
     //////////////// Added methods to bytecode ///////////
+
     public static synchronized void incComplexity(int weight){
         complexity.get()[0] += weight;
     }
 
+    public static synchronized void initProgressMarkers(String className){
+        Request request = WebServerHandler.request.get();
+        if(request.getEstimatedComplexity() != 0){
+            int progressStep = request.getEstimatedComplexity() / NUM_PROGRESS_MARKERS;
+            long[] markers = progressMarkers.get();
+            for(int i = 0; i < markers.length; i++){
+                markers[i] = i*progressStep;
+            }
+        }
+    }
 
+    /**
+     * Check if the next progress marker has been met
+     * if so, update loadbalancer on progress of request.
+     */
+    public static synchronized void tryUpdateProgress(String className){
+        Request request = WebServerHandler.request.get();
+        if(request.getEstimatedComplexity() != 0 ){
+            int measuredComplexitySoFar = complexity.get()[0];
+            if(measuredComplexitySoFar > progressMarkers.get()[currentProgressMarker.get()+1]){
+                currentProgressMarker.get() = new Integer(currentProgressMarker.get()+1);
+                double progressPercentage = ((double) 1 / NUM_PROGRESS_MARKERS) * currentProgressMarker.get();
+                request.setProgress((progressPercentage);
+                updateLoadBalancerOnProgress(className);
+            }
+        }
+    }
+
+
+    /**
+     * Called when the request finishes execution
+     */
     public static synchronized void sendMetricData(String className) {
         Request request = WebServerHandler.request.get();
         String searchAlgo = request.getSearchAlgorithm().toString();
@@ -159,6 +226,9 @@ public class BitTool {
         // set measured complexity and mark request as finished (progress=1)
         request.setMeasuredComplexity(complexity.get()[0]);
         request.setProgress(1);
+        currentProgressMarker = new Integer(0);
+
+        updateLoadBalancerOnProgress(className);
 
         try{
             PrintWriter writer = new PrintWriter("bitToolOutput_"+searchAlgo+"_"+mapSize+".txt", "UTF-8");
@@ -174,9 +244,10 @@ public class BitTool {
     }
 
     /// auxiliary methods
+    public static synchronized void updateLoadBalancerOnProgress(String classInfo){
+        Request request = WebServerHandler.request.get();
 
-    public static synchronized void updateLoadBalancerOnProgress(Request request){
-        if(request.getProgress() != 1 && request.getEstimatedComplexity() != 0){
+        if(request.getEstimatedComplexity() != 0){
             Instance instance = WebServer.instanceManager.getLoadBalancerInstance();
             String ip = instance.getPrivateIpAddress();
             String targetUrl = HttpUtil.buildUrl(ip, 8000);
@@ -200,8 +271,6 @@ public class BitTool {
     public static synchronized long calculateRequestProgress(Request request){
         return request.getEstimatedComplexity() / complexity.get()[0];
     }
-
-
 
 }
 

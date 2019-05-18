@@ -143,8 +143,6 @@ public class InstanceManager {
 		ec2.deleteTags(deleteTagsRequest);
 	}
 
-
-
 	/**
 	 * Find the instance with the tag mss
 	 * @return
