@@ -9,7 +9,7 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 
 public class WebServer {
-	private static InstanceManager instanceManager = new InstanceManager();
+	public static final InstanceManager instanceManager = new InstanceManager();
 
 	private static boolean isTestingLocally = false;
 

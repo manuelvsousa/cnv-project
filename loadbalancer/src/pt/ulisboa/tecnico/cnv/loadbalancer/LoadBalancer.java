@@ -2,12 +2,12 @@ package pt.ulisboa.tecnico.cnv.loadbalancer;
 
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.util.EC2MetadataUtils;
-import com.google.gson.JsonObject;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import pt.ulisboa.tecnico.cnv.lib.ec2.InstanceManager;
+import pt.ulisboa.tecnico.cnv.lib.http.HttpUtil;
 import pt.ulisboa.tecnico.cnv.lib.query.QueryParser;
 import pt.ulisboa.tecnico.cnv.lib.request.Request;
 import pt.ulisboa.tecnico.cnv.mssclient.MSSClient;
@@ -17,6 +17,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.*;
 import java.util.concurrent.Executors;
 
@@ -82,7 +83,7 @@ public class LoadBalancer {
 			}
 
 			//String ip = "localhost";
-			String redirectUrl = buildRedirectUrl(ip, 8080);
+			String redirectUrl = HttpUtil.buildUrl(ip, 8080);
 			System.out.println("redirecting to " + redirectUrl);
 
 			BufferedImage bufferedImage = doGET(redirectUrl, t.getRequestURI().getQuery().toString());
@@ -118,7 +119,17 @@ public class LoadBalancer {
 			InstanceManager instanceManager = new InstanceManager();
 			Instance instance = instanceManager.getInstanceById(queryParser.getInstanceId());
 
-			updateRequestById(request, instance);
+			if(request.getProgress() == 1){
+				// remove from runing requests
+				removeRequestById(request, instance);
+
+				// TODO send to MSS
+
+
+			}else{
+				// replace current request to have progress updated for loadbalancing decisions
+				updateRequestById(request, instance);
+			}
 		}
 	}
 
@@ -178,13 +189,25 @@ public class LoadBalancer {
 		List<Request> requests = runningRequests.get(instance);
 		for(int i = 0; i < requests.size(); i++){
 			if(requests.get(i).getId() == request.getId()){
-				requests.remove(requests.get(i));
+				requests.remove(i);
 				requests.add(request);
 			}
 		}
 		runningRequests.remove(instance);
 		runningRequests.put(instance, requests);
 	}
+
+	private static void removeRequestById(Request request, Instance instance){
+		List<Request> requests = runningRequests.get(instance);
+		for(int i = 0; i < requests.size(); i++){
+			if(requests.get(i).getId() == request.getId()){
+				requests.remove(i);
+			}
+		}
+		runningRequests.remove(instance);
+		runningRequests.put(instance, requests);
+	}
+
 
 	private static int getBufferedImageSize(BufferedImage bufferedImage){
 		try{
@@ -202,15 +225,16 @@ public class LoadBalancer {
 		try {
 			URL url = new URL(targetUrl + "?" + urlParameters);
 			image = ImageIO.read(url);
+
+			// TESTING
+			URLConnection connection = url.openConnection();
+			connection.connect();;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return image;
 	}
 
-	private static String buildRedirectUrl(String ip, int port){
-		return "http://" + ip + ":" + port + "/climb";
-	}
 
 }
 

@@ -28,6 +28,7 @@ public class WebServerHandler implements HttpHandler {
         QueryParser queryParser = new QueryParser(query);
         SolverArgumentParser ap = queryParser.getSolverArgumentParser();
         request.set(queryParser.getRequest());
+        request.get().setQuery(query);
         System.out.println("> Finished parsing args.");
 
 

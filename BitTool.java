@@ -147,12 +147,18 @@ public class BitTool {
     }
 
     //////////////// Added methods to bytecode ///////////
+    public static synchronized void incComplexity(int weight){
+        complexity.get()[0] += weight;
+    }
+
 
     public static synchronized void sendMetricData(String className) {
         Request request = WebServerHandler.request.get();
         String searchAlgo = request.getSearchAlgorithm().toString();
         String mapSize = request.getMapSize().getWidth()+"_"+request.getMapSize().getHeight();
+        // set measured complexity and mark request as finished (progress=1)
         request.setMeasuredComplexity(complexity.get()[0]);
+        request.setProgress(1);
 
         try{
             PrintWriter writer = new PrintWriter("bitToolOutput_"+searchAlgo+"_"+mapSize+".txt", "UTF-8");
@@ -167,10 +173,33 @@ public class BitTool {
 
     }
 
-    public static synchronized void incComplexity(int weight){
-        complexity.get()[0] += weight;
+    /// auxiliary methods
+
+    public static synchronized void updateLoadBalancerOnProgress(Request request){
+        if(request.getProgress() != 1 && request.getEstimatedComplexity() != 0){
+            Instance instance = WebServer.instanceManager.getMSSInstance();
+            String ip = instance.getPrivateIpAddress();
+            String targetUrl = HttpUtil.buildUrl(ip, 8000);
+            String urlParams = request.getQuery()+"&reqid="+request.getId()+
+                    "&instanceId="+instance.getInstanceId()+"&progress="+request.getProgress());
+            URL url = new URL(targetUrl);
+
+            HttpUrlConnection con = (HttpUrlConnection) url.openConnection();
+            con.setRequestMethod("POST");
+
+            con.setDoOutput(true);
+            DataOutputStream dataOutputStream = new DataOutputStream(con.getOutputStream());
+            dataOutputStream.writeBytes(urlParams);
+            dataOutputStream.flush();
+            dataOutputStream.close();
+
+            int responseCode = con.getResponseCode();
+        }
     }
 
+    public static synchronized long calculateRequestProgress(Request request){
+        return request.getEstimatedComplexity() / complexity.get()[0];
+    }
 
 
 

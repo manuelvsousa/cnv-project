@@ -11,6 +11,8 @@ public class Request {
     private Point point1; // lower right
     private double progress;
 
+    private String query;
+
     private static int ID_COUNTER = 0;
 
     // defined by the loadbalancer as an estimate of the complexity of this request before execution
@@ -95,6 +97,14 @@ public class Request {
 
     public void setMeasuredComplexity(int measuredComplexity) {
         this.measuredComplexity = measuredComplexity;
+    }
+
+    public String getQuery() {
+        return query;
+    }
+
+    public void setQuery(String query) {
+        this.query = query;
     }
 
     public enum SearchAlgorithm {
