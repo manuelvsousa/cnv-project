@@ -152,6 +152,7 @@ public class BitTool {
         Request request = WebServerHandler.request.get();
         String searchAlgo = request.getSearchAlgorithm().toString();
         String mapSize = request.getMapSize().getWidth()+"_"+request.getMapSize().getHeight();
+        request.setMeasuredComplexity(complexity.get()[0]);
 
         try{
             PrintWriter writer = new PrintWriter("bitToolOutput_"+searchAlgo+"_"+mapSize+".txt", "UTF-8");

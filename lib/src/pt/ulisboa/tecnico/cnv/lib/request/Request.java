@@ -1,38 +1,52 @@
 package pt.ulisboa.tecnico.cnv.lib.request;
 
 /**
- * Represents a HillClimber request, indicating:
- * Search algorithm used
- * mapsize
- * starting point
+ * Represents a HillClimber request
  */
 public class Request {
+    private int id;
     private SearchAlgorithm searchAlgorithm;
-    private Size mapSize;
     private Point startingPoint;
+    private Point point0; // upper left
+    private Point point1; // lower right
+    private double progress;
 
-    private int estimatedTimeComplexity;
-    private int estimatedSpaceComplexity;
+    private static int ID_COUNTER = 0;
 
-    public Request(SearchAlgorithm searchAlgorithm, Size mapSize, Point startingPoint) {
-        this.searchAlgorithm = searchAlgorithm;
-        this.mapSize = mapSize;
-        this.startingPoint = startingPoint;
+    // defined by the loadbalancer as an estimate of the complexity of this request before execution
+    private int estimatedComplexity;
+
+    // measured from executing the request through instrumentation
+    private int measuredComplexity;
+
+    public Request(){
+        this.id = ID_COUNTER;
+        ID_COUNTER++;
     }
+
+    public Request(SearchAlgorithm searchAlgorithm, Point startingPoint, Point point0, Point point1) {
+        this();
+        this.searchAlgorithm = searchAlgorithm;
+        this.startingPoint = startingPoint;
+        this.point0 = point0;
+        this.point1 = point1;
+    }
+
+    public Request(SearchAlgorithm searchAlgorithm, Point startingPoint, Point point0, Point point1, int estimatedComplexity) {
+        this();
+        this.searchAlgorithm = searchAlgorithm;
+        this.startingPoint = startingPoint;
+        this.point0 = point0;
+        this.point1 = point1;
+        this.estimatedComplexity = estimatedComplexity;
+    }
+
     public SearchAlgorithm getSearchAlgorithm() {
         return searchAlgorithm;
     }
 
     public void setSearchAlgorithm(SearchAlgorithm searchAlgorithm) {
         this.searchAlgorithm = searchAlgorithm;
-    }
-
-    public Size getMapSize() {
-        return mapSize;
-    }
-
-    public void setMapSize(Size mapSize) {
-        this.mapSize = mapSize;
     }
 
     public Point getStartingPoint() {
@@ -43,33 +57,57 @@ public class Request {
         this.startingPoint = startingPoint;
     }
 
-    public enum SearchAlgorithm{
+    public int getEstimatedComplexity() {
+        return estimatedComplexity;
+    }
+
+    public void setEstimatedComplexity(int estimatedComplexity) {
+        this.estimatedComplexity = estimatedComplexity;
+    }
+
+    public void setProgress(double progress) {
+        this.progress = progress;
+    }
+
+    public void setId(int requestId) {
+        this.id = requestId;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public Point getPoint0() {
+        return point0;
+    }
+
+    public Point getPoint1() {
+        return point1;
+    }
+
+    public double getProgress() {
+        return progress;
+    }
+
+    public int getMeasuredComplexity() {
+        return measuredComplexity;
+    }
+
+    public void setMeasuredComplexity(int measuredComplexity) {
+        this.measuredComplexity = measuredComplexity;
+    }
+
+    public enum SearchAlgorithm {
         ASTAR("ASTAR"), DFS("DFS"), BFS("BFS");
         private String value;
 
-        SearchAlgorithm(String value){
+        SearchAlgorithm(String value) {
             this.value = value;
         }
 
         @Override
-        public String toString(){
+        public String toString() {
             return value;
         }
-    };
-
-    public int getEstimatedTimeComplexity() {
-        return estimatedTimeComplexity;
-    }
-
-    public void setEstimatedTimeComplexity(int estimatedTimeComplexity) {
-        this.estimatedTimeComplexity = estimatedTimeComplexity;
-    }
-
-    public int getEstimatedSpaceComplexity() {
-        return estimatedSpaceComplexity;
-    }
-
-    public void setEstimatedSpaceComplexity(int estimatedSpaceComplexity) {
-        this.estimatedSpaceComplexity = estimatedSpaceComplexity;
     }
 }

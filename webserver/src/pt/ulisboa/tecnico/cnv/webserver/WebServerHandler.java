@@ -8,7 +8,6 @@ import pt.ulisboa.tecnico.cnv.hillclimber.solver.SolverArgumentParser;
 import pt.ulisboa.tecnico.cnv.hillclimber.solver.SolverFactory;
 import pt.ulisboa.tecnico.cnv.lib.query.QueryParser;
 import pt.ulisboa.tecnico.cnv.lib.request.Request;
-import pt.ulisboa.tecnico.cnv.lib.request.RequestBuilder;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -26,8 +25,9 @@ public class WebServerHandler implements HttpHandler {
 
         // Get the query.
         final String query = t.getRequestURI().getQuery();
-        SolverArgumentParser ap = QueryParser.parse(query);
-        request.set(RequestBuilder.fromQuery(query));
+        QueryParser queryParser = new QueryParser(query);
+        SolverArgumentParser ap = queryParser.getSolverArgumentParser();
+        request.set(queryParser.getRequest());
         System.out.println("> Finished parsing args.");
 
 
