@@ -10,7 +10,6 @@ import pt.ulisboa.tecnico.cnv.lib.ec2.InstanceManager;
 import pt.ulisboa.tecnico.cnv.lib.http.HttpUtil;
 import pt.ulisboa.tecnico.cnv.lib.query.QueryParser;
 import pt.ulisboa.tecnico.cnv.lib.request.Request;
-import pt.ulisboa.tecnico.cnv.mssclient.MSSClient;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -24,7 +23,6 @@ import java.util.concurrent.Executors;
 public class LoadBalancer {
 	private static HashMap<Instance, List<Request>> runningRequests;
 	private static InstanceManager instanceManager = new InstanceManager();
-	private static MSSClient mssClient;
 	private static int mssPort = 8001;
 	private static boolean isTestingLocally = false;
 
@@ -35,11 +33,9 @@ public class LoadBalancer {
 		if(args.length == 1 && args[0].equals("-localhost")){
 			isTestingLocally = true;
 			System.out.println("Running Loadbalancer on localhost.");
-			mssClient = new MSSClient("localhost", mssPort);
 		}else{
 			Instance mssInstance = instanceManager.getMSSInstance();
 			String mssIp = mssInstance.getPrivateIpAddress();
-			mssClient = new MSSClient(mssIp, mssPort);
 			System.out.println("Created MSS client talking to server at: " + mssIp +":" + mssPort);
 		}
 
