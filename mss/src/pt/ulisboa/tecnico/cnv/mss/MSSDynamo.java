@@ -2,7 +2,6 @@ package pt.ulisboa.tecnico.cnv.mss;
 
 
 import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
@@ -75,7 +74,7 @@ public class MSSDynamo {
         return scanResult;
     }
 
-    public ScanResult search(String searchAlgorithm, int mapWidth){
+    public ScanResult search(String searchAlgorithm, int mapWidth) {
         HashMap<String, Condition> scanFilter = new HashMap<>();
         Condition searchAlgorithmCondition = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ.toString())
