@@ -45,10 +45,20 @@ public class MSSClient {
         return scanResult.getItems().toString();
     }
 
+    /**
+     * Get list of requests stored in dynamodb that were ran previously, with the same searchalgorithm
+     */
     public List<Request> getMetrics(Request.SearchAlgorithm searchAlgorithm) {
         ScanResult scanResult = mssDynamo.search(searchAlgorithm.toString());
         return buildRequestsFromDynamoItems(scanResult.getItems());
+    }
 
+    /**
+     * Get list of requests stored in dynamodb that were ran previously, with the same searchalgorithm and dataset
+     */
+    public List<Request> getMetrics(Request.SearchAlgorithm searchAlgorithm, String dataset){
+        ScanResult scanResult = mssDynamo.search(searchAlgorithm.toString(), dataset);
+        return buildRequestsFromDynamoItems(scanResult.getItems());
     }
 
     private List<Request> buildRequestsFromDynamoItems(List<Map<String, AttributeValue>> items){
