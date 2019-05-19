@@ -47,14 +47,11 @@ public class WebServer {
 		@Override
 		public void handle(HttpExchange t) throws IOException {
 			final Headers hdrs = t.getResponseHeaders();
-			t.sendResponseHeaders(200, 4);
-			hdrs.add("Content-Type", "image/png");
-			hdrs.add("Access-Control-Allow-Origin", "*");
-			hdrs.add("Access-Control-Allow-Credentials", "true");
-			hdrs.add("Access-Control-Allow-Methods", "POST, GET, HEAD, OPTIONS");
-			hdrs.add("Access-Control-Allow-Headers", "Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
+			String toSend = Integer.toString(requestCount);
+			t.sendResponseHeaders(200, toSend.length());
+			hdrs.add("Content-Type", "text/plain");
 			final OutputStream os = t.getResponseBody();
-			os.write(requestCount);
+			os.write(toSend.getBytes());
 			os.close();
 		}
 	}
