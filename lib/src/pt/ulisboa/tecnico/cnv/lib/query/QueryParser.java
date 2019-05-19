@@ -14,7 +14,8 @@ public class QueryParser {
     private String instanceId;
     private double requestProgress;
     private int requestId;
-    private long estimatedComplexity;
+    private long estimatedComplexity = 0;
+	private long measuredComplexity = 0;
 
     public QueryParser(String query){
         this.query = query;
@@ -28,6 +29,7 @@ public class QueryParser {
         this.request.setProgress(requestProgress);
         this.request.setId(requestId);
         this.request.setEstimatedComplexity(estimatedComplexity);
+		this.request.setMeasuredComplexity(measuredComplexity);
     }
 
     private SolverArgumentParser parse(String query){
@@ -45,7 +47,9 @@ public class QueryParser {
                 this.requestId = Integer.parseInt(splitParam[1]);
             }else if(splitParam[0].equals("instanceId")){
                 this.instanceId = splitParam[1];
-            }else if(splitParam[0].equals("estimatedComplexity")){
+            }else if(splitParam[0].equals("measuredComplexity")){
+				this.measuredComplexity = Long.parseLong(splitParam[1]);
+	    	}else if(splitParam[0].equals("estimatedComplexity")){
                 this.estimatedComplexity = Long.parseLong(splitParam[1]);
             }else{
                 newArgs.add("-" + splitParam[0]);

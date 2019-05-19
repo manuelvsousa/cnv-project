@@ -240,7 +240,7 @@ public class BitTool {
         String ip = instance.getPrivateIpAddress();
         String targetUrl = HttpUtil.buildUrl(ip, 8000) + "/requestStatus";
         String urlParams = request.getQuery()+"&reqid="+request.getId()+
-                "&instanceId="+WebServer.instanceId.substring(2)+"&progress="+request.getProgress();
+                "&instanceId="+WebServer.instanceId.substring(2)+"&progress="+request.getProgress()+"&measuredComplexity="+request.getMeasuredComplexity();
 	String urlStr = targetUrl +"?" + urlParams;
         try{
             URL url = new URL(urlStr);
