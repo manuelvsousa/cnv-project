@@ -14,6 +14,7 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 
 public class WebServer {
+	public static final String instanceId = EC2MetadataUtils.getInstanceId();
 	public static final InstanceManager instanceManager = new InstanceManager();
 	public static int requestCount = 0;
 
@@ -35,7 +36,6 @@ public class WebServer {
 		}else{
 			// clear previous tags and set loadbalancer tag for instance identification
 			Instance instance = instanceManager.getInstanceById(EC2MetadataUtils.getInstanceId());
-			System.out.println("instance to clear: "+ instance);
 			instanceManager.clearInstanceTags(instance);
 			instanceManager.tagInstanceAsWorker(instance);
 		}

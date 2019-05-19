@@ -238,9 +238,9 @@ public class BitTool {
 
         Instance instance = WebServer.instanceManager.getLoadBalancerInstance();
         String ip = instance.getPrivateIpAddress();
-        String targetUrl = HttpUtil.buildUrl(ip, 8000);
+        String targetUrl = HttpUtil.buildUrl(ip, 8000) + "/requestStatus";
         String urlParams = request.getQuery()+"&reqid="+request.getId()+
-                "&instanceId="+instance.getInstanceId()+"&progress="+request.getProgress();
+                "&instanceId="+WebServer.instanceId.substring(2)+"&progress="+request.getProgress();
 	String urlStr = targetUrl +"?" + urlParams;
         try{
             URL url = new URL(urlStr);
