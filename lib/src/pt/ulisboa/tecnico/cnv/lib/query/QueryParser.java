@@ -21,6 +21,7 @@ public class QueryParser {
         this.solverArgumentParser = parse(query);
         Request.SearchAlgorithm algo = Request.SearchAlgorithm.valueOf(solverArgumentParser.getSolverStrategy().toString());
         this.request = new Request(algo,
+                solverArgumentParser.getInputImage(),
                 new Point(solverArgumentParser.getStartX(), solverArgumentParser.getStartY()),
                 new Point(solverArgumentParser.getX0(), solverArgumentParser.getY0()),
                 new Point(solverArgumentParser.getX1(), solverArgumentParser.getY1()));

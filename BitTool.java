@@ -228,20 +228,8 @@ public class BitTool {
         request.setMeasuredComplexity(complexity.get()[0]);
         request.setProgress(1);
         currentProgressMarker.set(new Integer(0));
-
         updateLoadBalancerOnProgress(className);
-
-        try{
-            PrintWriter writer = new PrintWriter("bitToolOutput_"+searchAlgo+".txt", "UTF-8");
-            writer.println("Complexity: " + complexity.get()[0]);
-            writer.println("Search algorithm: " + WebServerHandler.request.get().getSearchAlgorithm());
-            writer.close();
-
-            complexity.get()[0]=0;
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-
+        complexity.get()[0]=0;
     }
 
     /// auxiliary methods

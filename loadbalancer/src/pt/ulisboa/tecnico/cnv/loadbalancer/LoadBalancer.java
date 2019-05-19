@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.cnv.loadbalancer;
 
+import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.util.EC2MetadataUtils;
 import com.sun.net.httpserver.Headers;
@@ -9,6 +10,7 @@ import com.sun.net.httpserver.HttpServer;
 import pt.ulisboa.tecnico.cnv.lib.ec2.InstanceManager;
 import pt.ulisboa.tecnico.cnv.lib.http.HttpUtil;
 import pt.ulisboa.tecnico.cnv.lib.query.QueryParser;
+import pt.ulisboa.tecnico.cnv.lib.request.Point;
 import pt.ulisboa.tecnico.cnv.lib.request.Request;
 import pt.ulisboa.tecnico.cnv.mss.MSSClient;
 
@@ -27,6 +29,15 @@ public class LoadBalancer {
 	private static boolean isTestingLocally = false;
 
 	public static void main(final String[] args) throws Exception {
+		/*MSSClient.getInstance().addMetrics(2, Request.SearchAlgorithm.ASTAR.toString(),
+				"dataset", new Point(0,0), new Point(0,0), new Point(512,512),
+				"27359344329");
+		*/
+
+		List<Request> requests = MSSClient.getInstance().getMetrics(Request.SearchAlgorithm.ASTAR);
+		System.out.println("test");
+		/*
+
 		final HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
 
 		server.createContext("/climb", new ClimbHandler());
@@ -46,8 +57,9 @@ public class LoadBalancer {
 			instanceManager.clearInstanceTags(instance);
 			instanceManager.tagInstanceAsLoadBalancer(instance);
 		}
-
 		System.out.println(server.getAddress().toString());
+
+		*/
 	}
 
 	/**
@@ -110,20 +122,21 @@ public class LoadBalancer {
 
 			InstanceManager instanceManager = new InstanceManager();
 			Instance instance = instanceManager.getInstanceById(queryParser.getInstanceId());
+			updateRequestById(request, instance);
 
 			if(request.getProgress() == 1){
-				// remove from runing requests
+				// remove from running requests
 				removeRequestById(request, instance);
 
 				MSSClient.getInstance().addMetrics(
+						request.getId(),
 						request.getSearchAlgorithm().toString(),
-						request.getStartingPoint().getX(),
-						request.getStartingPoint().getY(),
-						request.getMeasuredComplexity()
+						request.getDataset(),
+						request.getStartingPoint(),
+						request.getPoint0(),
+						request.getPoint1(),
+						Long.toString(request.getMeasuredComplexity())
 				);
-			}else{
-				// replace current request to have progress updated for loadbalancing decisions
-				updateRequestById(request, instance);
 			}
 		}
 	}
@@ -160,10 +173,8 @@ public class LoadBalancer {
 	public static int estimateComplexity(Request request){
 		// get metrics of similar requests and estimate complexity of this request
 		List<Request> recentRequests = new ArrayList<>();
-		String metrics = MSSClient.getInstance().getMetrics(request.getSearchAlgorithm());
-		System.out.println("Metrics from mss: " + metrics);
-		// TODO test format of metrics and create a list of requests from them
-		// TODO requires aws instances
+		//String metrics = MSSClient.getInstance().getMetrics(request.getSearchAlgorithm());
+		//System.out.println("Metrics from mss: " + metrics);
 
 		if(recentRequests.size() == 0) return 0;
 		int complexitySum = 0;
@@ -172,10 +183,6 @@ public class LoadBalancer {
 		}
 		// average out
 		return complexitySum / recentRequests.size();
-	}
-
-	private static List<Request> getSimilarRecentRequests(Request.SearchAlgorithm search){
-		return null; // TODO
 	}
 
 	private static void storeRequest(Request request, Instance instance){
@@ -192,8 +199,8 @@ public class LoadBalancer {
 		List<Request> requests = runningRequests.get(instance);
 		for(int i = 0; i < requests.size(); i++){
 			if(requests.get(i).getId() == request.getId()){
-				requests.remove(i);
-				requests.add(request);
+				requests.get(i).setProgress(request.getProgress());
+				requests.get(i).setMeasuredComplexity(request.getMeasuredComplexity());
 			}
 		}
 		runningRequests.remove(instance);

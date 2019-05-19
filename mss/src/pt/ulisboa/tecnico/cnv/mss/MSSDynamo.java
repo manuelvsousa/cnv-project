@@ -40,11 +40,17 @@ public class MSSDynamo {
     }
 
 
-    public void addItem(String algorithm, int startX, int startY, long timeComplexity) {
+    public void addItem(int id,String algorithm, String dataset, int startX, int startY, int x0, int y0, int x1, int y1, long timeComplexity) {
         Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
+        item.put("id", new AttributeValue().withN(Integer.toString(id)));
         item.put("SearchAlgorithm", new AttributeValue(algorithm));
+        item.put("Dataset", new AttributeValue(dataset));
         item.put("StartX", new AttributeValue().withN(Integer.toString(startX)));
         item.put("StartY", new AttributeValue().withN(Integer.toString(startY)));
+        item.put("X0", new AttributeValue().withN(Integer.toString(x0)));
+        item.put("Y0", new AttributeValue().withN(Integer.toString(y0)));
+        item.put("X1", new AttributeValue().withN(Integer.toString(x1)));
+        item.put("Y1", new AttributeValue().withN(Integer.toString(y1)));
         item.put("TimeComplexity", new AttributeValue().withN(Long.toString(timeComplexity)));
         PutItemRequest putItemRequest = new PutItemRequest(TABLE_NAME, item);
         dynamoDB.putItem(putItemRequest);
