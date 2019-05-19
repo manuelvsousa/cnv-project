@@ -80,9 +80,8 @@ public class BitTool {
 
                         // Add write output method call when image solving is finished
                         if(isSolveImageRoutine(routine)){
-                            // add output metrics method call first
-                            addMetricOutputOnSolveImageCall(routine, ci);
                             addInitProgressMarkersCall(routine, ci);
+    						addMetricOutputOnSolveImageCall(routine, ci);
                         }
 
                         // LOAD, STORE, ALLOC, CONDITIONAL + # instructions
@@ -206,16 +205,23 @@ public class BitTool {
      */
     public static synchronized void tryUpdateProgress(String className){
         Request request = WebServerHandler.request.get();
-        if(request != null && request.getEstimatedComplexity() != 0 ){
+        if(areMarkersInitialized() && request != null && request.getEstimatedComplexity() != 0 ){
             long measuredComplexitySoFar = complexity.get()[0];
-            if(measuredComplexitySoFar > progressMarkers.get()[currentProgressMarker.get()+1]){
-                currentProgressMarker.set(new Integer(currentProgressMarker.get()+1));
+			request.setMeasuredComplexity(complexity.get()[0]);
+			int nextMarkerIndex = (currentProgressMarker.get()+1) % 4;
+            if(nextMarkerIndex != 0 && measuredComplexitySoFar > progressMarkers.get()[nextMarkerIndex]){
+				System.out.println("Hit marker i=: "+nextMarkerIndex + " with value: " + progressMarkers.get()[nextMarkerIndex]);
+                currentProgressMarker.set(new Integer(nextMarkerIndex));
                 double progressPercentage = ((double) 1 / NUM_PROGRESS_MARKERS) * currentProgressMarker.get();
                 request.setProgress(progressPercentage);
                 updateLoadBalancerOnProgress(className);
             }
         }
     }
+
+	private static synchronized boolean areMarkersInitialized(){
+		return progressMarkers.get()[1] != 0;
+	}
 
 
     /**
@@ -241,23 +247,23 @@ public class BitTool {
         String targetUrl = HttpUtil.buildUrl(ip, 8000) + "/requestStatus";
         String urlParams = request.getQuery()+"&reqid="+request.getId()+
                 "&instanceId="+WebServer.instanceId.substring(2)+"&progress="+request.getProgress()+"&measuredComplexity="+request.getMeasuredComplexity();
-	String urlStr = targetUrl +"?" + urlParams;
+		String urlStr = targetUrl +"?" + urlParams;
         try{
             URL url = new URL(urlStr);
-		System.out.println("URL: " +urlStr);
+			System.out.println("URL: " +urlStr);
 
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("GET");
 
-		con.setRequestProperty("Content-Type", "text/html");
-		BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-		String inputLine;
-		StringBuffer content = new StringBuffer();
-		while((inputLine=in.readLine()) != null){
-			content.append(inputLine);
-		}
-		in.close();
-		con.disconnect();
+			con.setRequestProperty("Content-Type", "text/html");
+			BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+			String inputLine;
+			StringBuffer content = new StringBuffer();
+			while((inputLine=in.readLine()) != null){
+				content.append(inputLine);
+			}
+			in.close();
+			con.disconnect();
 
         }catch(MalformedURLException e){
             e.printStackTrace();
