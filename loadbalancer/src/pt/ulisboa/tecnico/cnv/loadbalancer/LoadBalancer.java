@@ -1,6 +1,5 @@
 package pt.ulisboa.tecnico.cnv.loadbalancer;
 
-import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.util.EC2MetadataUtils;
 import com.sun.net.httpserver.Headers;
@@ -25,19 +24,9 @@ import java.util.concurrent.Executors;
 public class LoadBalancer {
 	private static HashMap<Instance, List<Request>> runningRequests;
 	private static InstanceManager instanceManager = new InstanceManager();
-	private static int mssPort = 8001;
 	private static boolean isTestingLocally = false;
 
 	public static void main(final String[] args) throws Exception {
-		/*MSSClient.getInstance().addMetrics(2, Request.SearchAlgorithm.ASTAR.toString(),
-				"dataset", new Point(0,0), new Point(0,0), new Point(512,512),
-				"27359344329");
-		*/
-
-		List<Request> requests = MSSClient.getInstance().getMetrics(Request.SearchAlgorithm.ASTAR);
-		System.out.println("test");
-		/*
-
 		final HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
 
 		server.createContext("/climb", new ClimbHandler());
@@ -58,8 +47,6 @@ public class LoadBalancer {
 			instanceManager.tagInstanceAsLoadBalancer(instance);
 		}
 		System.out.println(server.getAddress().toString());
-
-		*/
 	}
 
 	/**
@@ -69,7 +56,7 @@ public class LoadBalancer {
 		public void handle(final HttpExchange t) throws IOException {
 			// create request object
 			Request request = (new QueryParser(t.getRequestURI().getQuery())).getRequest();
-			int estimatedComplexity = estimateComplexity(request);
+			long estimatedComplexity = estimateComplexity(request);
 			request.setEstimatedComplexity(estimatedComplexity);
 
 			// select an instance to send this request to and get it's ip
@@ -170,19 +157,33 @@ public class LoadBalancer {
 	}
 
 
-	public static int estimateComplexity(Request request){
-		// get metrics of similar requests and estimate complexity of this request
-		List<Request> recentRequests = new ArrayList<>();
-		//String metrics = MSSClient.getInstance().getMetrics(request.getSearchAlgorithm());
-		//System.out.println("Metrics from mss: " + metrics);
+	public static long estimateComplexity(Request request){
+		// get metrics of similar requests with same search algo and dataset
+		List<Request> recentRequests = MSSClient.getInstance().getMetrics(request.getSearchAlgorithm(),
+				request.getDataset());
 
-		if(recentRequests.size() == 0) return 0;
-		int complexitySum = 0;
-		for(Request req : recentRequests){
-			complexitySum += req.getMeasuredComplexity();
+		if(recentRequests.size() != 0){
+			// get the request for this search algo and dataset where starting point is the closest to the
+			// starting point of the request currently being estimated.
+			int minDist = Integer.MAX_VALUE;
+			Request closestStartPointRequest = recentRequests.get(0);
+			for(Request req : recentRequests){
+				int dist = getDistanceBetweenPoints(request.getStartingPoint(), req.getStartingPoint());
+				if(dist < minDist){
+					closestStartPointRequest = req;
+					minDist = dist;
+				}
+			}
+			return closestStartPointRequest.getMeasuredComplexity();
 		}
-		// average out
-		return complexitySum / recentRequests.size();
+		return 0;
+	}
+
+	private static int getDistanceBetweenPoints(Point a, Point b){
+		int xDiff = b.getX() - a.getX();
+		int yDiff = b.getY() - a.getY();
+
+		return (int) Math.sqrt(Math.pow(xDiff,2) + Math.pow(yDiff, 2));
 	}
 
 	private static void storeRequest(Request request, Instance instance){
