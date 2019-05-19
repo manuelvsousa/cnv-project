@@ -236,33 +236,30 @@ public class BitTool {
     public static synchronized void updateLoadBalancerOnProgress(String classInfo){
         Request request = WebServerHandler.request.get();
 
-        if(request.getEstimatedComplexity() != 0){
-            Instance instance = WebServer.instanceManager.getLoadBalancerInstance();
-            String ip = instance.getPrivateIpAddress();
-            String targetUrl = HttpUtil.buildUrl(ip, 8000);
-            String urlParams = request.getQuery()+"&reqid="+request.getId()+
-                    "&instanceId="+instance.getInstanceId()+"&progress="+request.getProgress();
+        Instance instance = WebServer.instanceManager.getLoadBalancerInstance();
+        String ip = instance.getPrivateIpAddress();
+        String targetUrl = HttpUtil.buildUrl(ip, 8000);
+        String urlParams = request.getQuery()+"&reqid="+request.getId()+
+                "&instanceId="+instance.getInstanceId()+"&progress="+request.getProgress();
 
-            try{
-                URL url = new URL(targetUrl);
+        try{
+            URL url = new URL(targetUrl);
 
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                con.setRequestMethod("POST");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("POST");
 
-                con.setDoOutput(true);
-                DataOutputStream dataOutputStream = new DataOutputStream(con.getOutputStream());
-                dataOutputStream.writeBytes(urlParams);
-                dataOutputStream.flush();
-                dataOutputStream.close();
-
-                int responseCode = con.getResponseCode();
-            }catch(MalformedURLException e){
-                e.printStackTrace();
-            }catch(IOException e){
-                e.printStackTrace();
-            }
-
+            con.setDoOutput(true);
+            DataOutputStream dataOutputStream = new DataOutputStream(con.getOutputStream());
+            dataOutputStream.writeBytes(urlParams);
+            dataOutputStream.flush();
+            dataOutputStream.close();
+        }catch(MalformedURLException e){
+            e.printStackTrace();
+        }catch(IOException e){
+            e.printStackTrace();
         }
+
+
     }
 
     public static synchronized long calculateRequestProgress(Request request){

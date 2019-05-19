@@ -105,6 +105,7 @@ public class LoadBalancer {
 
 		@Override
 		public void handle(final HttpExchange t) throws IOException {
+			System.out.println("RequestStatusHandler ran");
 			// Get the query.
 			final String query = t.getRequestURI().getQuery();
 			QueryParser queryParser = new QueryParser(query);
