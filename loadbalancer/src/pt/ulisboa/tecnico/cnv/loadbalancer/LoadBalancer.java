@@ -74,7 +74,7 @@ public class LoadBalancer {
 			}
 
 			//String ip = "localhost";
-			String redirectUrl = HttpUtil.buildUrl(ip, 8080);
+			String redirectUrl = HttpUtil.buildUrl(ip, 8080) + "/climb";
 			System.out.println("Redirecting to " + redirectUrl);
 
 			BufferedImage bufferedImage = doGET(redirectUrl, t.getRequestURI().getQuery().toString()+
