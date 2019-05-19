@@ -241,20 +241,24 @@ public class BitTool {
         String targetUrl = HttpUtil.buildUrl(ip, 8000);
         String urlParams = request.getQuery()+"&reqid="+request.getId()+
                 "&instanceId="+instance.getInstanceId()+"&progress="+request.getProgress();
-
+	String urlStr = targetUrl +"?" + urlParams;
         try{
-            URL url = new URL(targetUrl);
+            URL url = new URL(urlStr);
+		System.out.println("URL: " +urlStr);
 
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setRequestMethod("POST");
+            con.setRequestMethod("GET");
 
-            con.setDoOutput(true);
-            DataOutputStream dataOutputStream = new DataOutputStream(con.getOutputStream());
-            dataOutputStream.writeBytes(urlParams);
-            dataOutputStream.flush();
-            dataOutputStream.close();
+		con.setRequestProperty("Content-Type", "text/html");
+		BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+		String inputLine;
+		StringBuffer content = new StringBuffer();
+		while((inputLine=in.readLine()) != null){
+			content.append(inputLine);
+		}
+		in.close();
+		con.disconnect();
 
-            int responseCode = con.getResponseCode();
         }catch(MalformedURLException e){
             e.printStackTrace();
         }catch(IOException e){
