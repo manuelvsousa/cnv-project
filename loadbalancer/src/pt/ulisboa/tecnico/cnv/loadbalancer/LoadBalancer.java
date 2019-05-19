@@ -65,9 +65,7 @@ public class LoadBalancer {
 				ip = "localhost";
 			}else{
 				Instance instance = selectInstanceForRequest(request);
-				System.out.println("selected instance id = " + instance.getInstanceId());
 				ip = instance.getPrivateIpAddress();
-				System.out.println("ip=" + ip);
 
 				// store request in the hashmap for this instance
 				storeRequest(request, instance);
@@ -112,7 +110,7 @@ public class LoadBalancer {
 			Request request = queryParser.getRequest();
 
 			InstanceManager instanceManager = new InstanceManager();
-			Instance instance = instanceManager.getInstanceById(queryParser.getInstanceId());
+			Instance instance = instanceManager.getInstanceById("i-"+queryParser.getInstanceId());
 			updateRequestById(request, instance);
 
 			if(request.getProgress() == 1){
@@ -130,14 +128,17 @@ public class LoadBalancer {
 				);
 			}
 
-			OutputStream os = t.getResponseBody();
 			final Headers hdrs = t.getResponseHeaders();
-			t.sendResponseHeaders(200, 0);
-			hdrs.add("Content-Type", "image/png");
+			String response ="";
+			t.sendResponseHeaders(200, response.length());
+			hdrs.add("Content-Typpe", "text/html");
 			hdrs.add("Access-Control-Allow-Origin", "*");
 			hdrs.add("Access-Control-Allow-Credentials", "true");
 			hdrs.add("Access-Control-Allow-Methods", "POST, GET, HEAD, OPTIONS");
 			hdrs.add("Access-Control-Allow-Headers", "Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
+
+			OutputStream os = t.getResponseBody();
+			os.write(response.getBytes());
 			os.close();
 		}
 	}
@@ -257,6 +258,7 @@ public class LoadBalancer {
 		BufferedImage image = null;
 		try {
 			URL url = new URL(targetUrl + "?" + urlParameters);
+			System.out.println("Doing get url: " + url);
 			image = ImageIO.read(url);
 		} catch (Exception e) {
 			e.printStackTrace();
