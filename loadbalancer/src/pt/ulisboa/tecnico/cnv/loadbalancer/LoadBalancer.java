@@ -54,8 +54,10 @@ public class LoadBalancer {
 	 */
 	static class ClimbHandler implements HttpHandler {
 		public void handle(final HttpExchange t) throws IOException {
+			String query = t.getRequestURI().getQuery();
+			System.out.println("Query: " + query);
 			// create request object
-			Request request = (new QueryParser(t.getRequestURI().getQuery())).getRequest();
+			Request request = (new QueryParser(query)).getRequest();
 			long estimatedComplexity = estimateComplexity(request);
 			request.setEstimatedComplexity(estimatedComplexity);
 
@@ -106,7 +108,7 @@ public class LoadBalancer {
 
 		@Override
 		public void handle(final HttpExchange t) throws IOException {
-			System.out.println("RequestStatusHandler ran");
+			System.out.println("REQUESTSTATUSHANDLER parsed the query progress update from webserver.");
 			// Get the query.
 			final String query = t.getRequestURI().getQuery();
 			QueryParser queryParser = new QueryParser(query);
@@ -119,7 +121,6 @@ public class LoadBalancer {
 			if(request.getProgress() == 1){
 				// remove from running requests
 				removeRequestById(request, instance);
-
 				MSSClient.getInstance().addMetrics(
 						request.getId(),
 						request.getSearchAlgorithm().toString(),
@@ -151,8 +152,8 @@ public class LoadBalancer {
 	 */
 	private static Instance selectInstanceForRequest(Request request){
 		Instance selectedInstance = null;
-		int lowestComplexity = Integer.MAX_VALUE;
-		int curSum = 0;
+		long lowestComplexity = Long.MAX_VALUE;
+		long curSum = 0;
 		Set<Instance> instances = instanceManager.getWorkerInstances();
 		for(Instance instance: instances){
 			
@@ -163,13 +164,16 @@ public class LoadBalancer {
 				continue;
 			}	
 
-			System.out.println("requests: " + requests);
 			// sum estimated time complexities of all requests
 			// any running request has estimated values, except 0 if no recent data exists
 			for(Request req : requests){
 				// Sum estimated complexities taking also into account the progress of the request
 				// progress is a double value ranging from 0 to 1
-				curSum += (int) (req.getEstimatedComplexity() * (1-req.getProgress()));
+				double leftOverPercentage = 1-req.getProgress();
+				curSum += (long) (req.getEstimatedComplexity() * leftOverPercentage);
+				System.out.println("leftover: "+leftOverPercentage);
+				System.out.println("estimated: " + req.getEstimatedComplexity());
+				System.out.println("instanceid: " + instance.getInstanceId() + " , aproximate total complexity = " + curSum);
 			}
 			if(curSum < lowestComplexity){
 				lowestComplexity = curSum;
@@ -181,7 +185,7 @@ public class LoadBalancer {
 		if(selectedInstance == null){
 			return instances.iterator().next();
 		}
-
+		System.out.println("redirecting request to instance with id: " + selectedInstance.getInstanceId());
 		return selectedInstance;
 	}
 

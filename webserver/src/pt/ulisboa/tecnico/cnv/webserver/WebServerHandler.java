@@ -26,6 +26,7 @@ public class WebServerHandler implements HttpHandler {
 
         // Get the query.
         final String query = t.getRequestURI().getQuery();
+	System.out.println("Query: " + query);
         QueryParser queryParser = new QueryParser(query);
         SolverArgumentParser ap = queryParser.getSolverArgumentParser();
         request.set(queryParser.getRequest());

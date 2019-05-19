@@ -33,7 +33,6 @@ public class QueryParser {
     }
 
     private SolverArgumentParser parse(String query){
-        System.out.println("> Query:\t" + query);
         // Break it down into String[].
         final String[] params = query.split("&");
 
