@@ -22,7 +22,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 
 public class LoadBalancer {
-	private static HashMap<Instance, List<Request>> runningRequests;
+	private static Map<Instance, List<Request>> runningRequests = new HashMap<>();
 	private static InstanceManager instanceManager = new InstanceManager();
 	private static boolean isTestingLocally = false;
 
@@ -65,6 +65,7 @@ public class LoadBalancer {
 				ip = "localhost";
 			}else{
 				Instance instance = selectInstanceForRequest(request);
+				System.out.println("selected instance id = " + instance.getInstanceId());
 				ip = instance.getPrivateIpAddress();
 				System.out.println("ip=" + ip);
 
@@ -139,22 +140,31 @@ public class LoadBalancer {
 		int curSum = 0;
 		Set<Instance> instances = instanceManager.getWorkerInstances();
 		for(Instance instance: instances){
+			
 			List<Request> requests = runningRequests.get(instance);
+		 	if(requests == null){
+				requests = new ArrayList<>();	
+				runningRequests.put(instance, requests);
+				continue;
+			}	
 
+			System.out.println("requests: " + requests);
 			// sum estimated time complexities of all requests
 			// any running request has estimated values, except 0 if no recent data exists
 			for(Request req : requests){
-
 				// Sum estimated complexities taking also into account the progress of the request
 				// progress is a double value ranging from 0 to 1
 				curSum += (int) (req.getEstimatedComplexity() * (1-req.getProgress()));
 			}
-
 			if(curSum < lowestComplexity){
 				lowestComplexity = curSum;
 				selectedInstance = instance;
 			}
 			curSum = 0;
+		}
+
+		if(selectedInstance == null){
+			return instances.iterator().next();
 		}
 
 		return selectedInstance;
