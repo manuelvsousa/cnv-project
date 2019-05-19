@@ -39,12 +39,17 @@ public class MSSDynamo {
                 .build();
     }
 
-
-    public void addItem(String algorithm, int startX, int startY, long timeComplexity) {
+    public void addItem(int id,String algorithm, String dataset, int startX, int startY, int x0, int y0, int x1, int y1, long timeComplexity) {
         Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
+        item.put("id", new AttributeValue().withN(Integer.toString(id)));
         item.put("SearchAlgorithm", new AttributeValue(algorithm));
+        item.put("Dataset", new AttributeValue(dataset));
         item.put("StartX", new AttributeValue().withN(Integer.toString(startX)));
         item.put("StartY", new AttributeValue().withN(Integer.toString(startY)));
+        item.put("X0", new AttributeValue().withN(Integer.toString(x0)));
+        item.put("Y0", new AttributeValue().withN(Integer.toString(y0)));
+        item.put("X1", new AttributeValue().withN(Integer.toString(x1)));
+        item.put("Y1", new AttributeValue().withN(Integer.toString(y1)));
         item.put("TimeComplexity", new AttributeValue().withN(Long.toString(timeComplexity)));
         PutItemRequest putItemRequest = new PutItemRequest(TABLE_NAME, item);
         dynamoDB.putItem(putItemRequest);
@@ -62,10 +67,7 @@ public class MSSDynamo {
 
     public ScanResult search(int id) {
         HashMap<String, Condition> scanFilter = new HashMap<>();
-        Condition condition = new Condition()
-                .withComparisonOperator(ComparisonOperator.EQ.toString())
-                .withAttributeValueList(new AttributeValue().withN(Integer.toString(id)));
-        scanFilter.put("id", condition);
+        scanFilter.put("id", createScanFilterConditionInt(id));
         ScanRequest scanRequest = new ScanRequest(TABLE_NAME).withScanFilter(scanFilter);
         ScanResult scanResult = dynamoDB.scan(scanRequest);
         return scanResult;
@@ -73,13 +75,37 @@ public class MSSDynamo {
 
     public ScanResult search(String searchAlgorithm) {
         HashMap<String, Condition> scanFilter = new HashMap<>();
-        Condition searchAlgorithmCondition = new Condition()
-                .withComparisonOperator(ComparisonOperator.EQ.toString())
-                .withAttributeValueList(new AttributeValue().withS(searchAlgorithm));
-        scanFilter.put("SearchAlgorithm", searchAlgorithmCondition);
+        scanFilter.put("SearchAlgorithm", createScanFilterConditionStr(searchAlgorithm));
         ScanRequest scanRequest = new ScanRequest(TABLE_NAME).withScanFilter(scanFilter);
         ScanResult scanResult = dynamoDB.scan(scanRequest);
         return scanResult;
+    }
+
+    public ScanResult search(String searchAlgorithm, String dataset) {
+        HashMap<String, Condition> scanFilter = new HashMap<>();
+        scanFilter.put("SearchAlgorithm", createScanFilterConditionStr(searchAlgorithm));
+        scanFilter.put("Dataset", createScanFilterConditionStr(dataset));
+        ScanRequest scanRequest = new ScanRequest(TABLE_NAME).withScanFilter(scanFilter);
+        ScanResult scanResult = dynamoDB.scan(scanRequest);
+        return scanResult;
+    }
+
+    /**
+     * Create a Condition object for string to be used as a filter in a scan of the dynamo db
+     */
+    private Condition createScanFilterConditionStr(String attributeValue){
+        return new Condition()
+                .withComparisonOperator(ComparisonOperator.EQ.toString())
+                .withAttributeValueList(new AttributeValue().withS(attributeValue));
+    }
+
+    /**
+     * Create a Condition object for string to be used as a filter in a scan of the dynamo db
+     */
+    private Condition createScanFilterConditionInt(int attributeValue){
+        return new Condition()
+                .withComparisonOperator(ComparisonOperator.EQ.toString())
+                .withAttributeValueList(new AttributeValue().withN(Integer.toString(attributeValue)));
     }
 
 }

@@ -192,7 +192,7 @@ public class BitTool {
     public static synchronized void initProgressMarkers(String className){
         Request request = WebServerHandler.request.get();
         if(request.getEstimatedComplexity() != 0){
-            int progressStep = request.getEstimatedComplexity() / NUM_PROGRESS_MARKERS;
+            long progressStep = request.getEstimatedComplexity() / NUM_PROGRESS_MARKERS;
             long[] markers = progressMarkers.get();
             for(int i = 0; i < markers.length; i++){
                 markers[i] = i*progressStep;
@@ -228,53 +228,40 @@ public class BitTool {
         request.setMeasuredComplexity(complexity.get()[0]);
         request.setProgress(1);
         currentProgressMarker.set(new Integer(0));
-
         updateLoadBalancerOnProgress(className);
-
-        try{
-            PrintWriter writer = new PrintWriter("bitToolOutput_"+searchAlgo+".txt", "UTF-8");
-            writer.println("Complexity: " + complexity.get()[0]);
-            writer.println("Search algorithm: " + WebServerHandler.request.get().getSearchAlgorithm());
-            writer.close();
-
-            complexity.get()[0]=0;
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-
+        complexity.get()[0]=0;
     }
 
     /// auxiliary methods
     public static synchronized void updateLoadBalancerOnProgress(String classInfo){
         Request request = WebServerHandler.request.get();
 
-        if(request.getEstimatedComplexity() != 0){
-            Instance instance = WebServer.instanceManager.getLoadBalancerInstance();
-            String ip = instance.getPrivateIpAddress();
-            String targetUrl = HttpUtil.buildUrl(ip, 8000);
-            String urlParams = request.getQuery()+"&reqid="+request.getId()+
-                    "&instanceId="+instance.getInstanceId()+"&progress="+request.getProgress();
+        Instance instance = WebServer.instanceManager.getLoadBalancerInstance();
+        String ip = instance.getPrivateIpAddress();
+        String targetUrl = HttpUtil.buildUrl(ip, 8000);
+        String urlParams = request.getQuery()+"&reqid="+request.getId()+
+                "&instanceId="+instance.getInstanceId()+"&progress="+request.getProgress();
 
-            try{
-                URL url = new URL(targetUrl);
+        try{
+            URL url = new URL(targetUrl);
 
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                con.setRequestMethod("POST");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("POST");
 
-                con.setDoOutput(true);
-                DataOutputStream dataOutputStream = new DataOutputStream(con.getOutputStream());
-                dataOutputStream.writeBytes(urlParams);
-                dataOutputStream.flush();
-                dataOutputStream.close();
+            con.setDoOutput(true);
+            DataOutputStream dataOutputStream = new DataOutputStream(con.getOutputStream());
+            dataOutputStream.writeBytes(urlParams);
+            dataOutputStream.flush();
+            dataOutputStream.close();
 
-                int responseCode = con.getResponseCode();
-            }catch(MalformedURLException e){
-                e.printStackTrace();
-            }catch(IOException e){
-                e.printStackTrace();
-            }
-
+            int responseCode = con.getResponseCode();
+        }catch(MalformedURLException e){
+            e.printStackTrace();
+        }catch(IOException e){
+            e.printStackTrace();
         }
+
+
     }
 
     public static synchronized long calculateRequestProgress(Request request){

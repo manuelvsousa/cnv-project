@@ -14,17 +14,20 @@ public class QueryParser {
     private String instanceId;
     private double requestProgress;
     private int requestId;
+    private long estimatedComplexity;
 
     public QueryParser(String query){
         this.query = query;
         this.solverArgumentParser = parse(query);
         Request.SearchAlgorithm algo = Request.SearchAlgorithm.valueOf(solverArgumentParser.getSolverStrategy().toString());
         this.request = new Request(algo,
+                solverArgumentParser.getInputImage(),
                 new Point(solverArgumentParser.getStartX(), solverArgumentParser.getStartY()),
                 new Point(solverArgumentParser.getX0(), solverArgumentParser.getY0()),
                 new Point(solverArgumentParser.getX1(), solverArgumentParser.getY1()));
         this.request.setProgress(requestProgress);
         this.request.setId(requestId);
+        this.request.setEstimatedComplexity(estimatedComplexity);
     }
 
     private SolverArgumentParser parse(String query){
@@ -42,6 +45,8 @@ public class QueryParser {
                 this.requestId = Integer.parseInt(splitParam[1]);
             }else if(splitParam[0].equals("instanceId")){
                 this.instanceId = splitParam[1];
+            }else if(splitParam[0].equals("estimatedComplexity")){
+                this.estimatedComplexity = Long.parseLong(splitParam[1]);
             }else{
                 newArgs.add("-" + splitParam[0]);
                 newArgs.add(splitParam[1]);

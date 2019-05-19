@@ -9,6 +9,7 @@ import com.sun.net.httpserver.HttpServer;
 import pt.ulisboa.tecnico.cnv.lib.ec2.InstanceManager;
 import pt.ulisboa.tecnico.cnv.lib.http.HttpUtil;
 import pt.ulisboa.tecnico.cnv.lib.query.QueryParser;
+import pt.ulisboa.tecnico.cnv.lib.request.Point;
 import pt.ulisboa.tecnico.cnv.lib.request.Request;
 import pt.ulisboa.tecnico.cnv.mss.MSSClient;
 
@@ -17,14 +18,12 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.*;
 import java.util.concurrent.Executors;
 
 public class LoadBalancer {
-	private static HashMap<Instance, List<Request>> runningRequests;
+	private static Map<Instance, List<Request>> runningRequests = new HashMap<>();
 	private static InstanceManager instanceManager = new InstanceManager();
-	private static int mssPort = 8001;
 	private static boolean isTestingLocally = false;
 
 	public static void main(final String[] args) throws Exception {
@@ -47,7 +46,6 @@ public class LoadBalancer {
 			instanceManager.clearInstanceTags(instance);
 			instanceManager.tagInstanceAsLoadBalancer(instance);
 		}
-
 		System.out.println(server.getAddress().toString());
 	}
 
@@ -58,7 +56,7 @@ public class LoadBalancer {
 		public void handle(final HttpExchange t) throws IOException {
 			// create request object
 			Request request = (new QueryParser(t.getRequestURI().getQuery())).getRequest();
-			int estimatedComplexity = calculateComplexityEstimate(request);
+			long estimatedComplexity = estimateComplexity(request);
 			request.setEstimatedComplexity(estimatedComplexity);
 
 			// select an instance to send this request to and get it's ip
@@ -67,19 +65,20 @@ public class LoadBalancer {
 				ip = "localhost";
 			}else{
 				Instance instance = selectInstanceForRequest(request);
+				System.out.println("selected instance id = " + instance.getInstanceId());
 				ip = instance.getPrivateIpAddress();
 				System.out.println("ip=" + ip);
 
 				// store request in the hashmap for this instance
 				storeRequest(request, instance);
-				System.out.println("storing request");
 			}
 
 			//String ip = "localhost";
 			String redirectUrl = HttpUtil.buildUrl(ip, 8080);
-			System.out.println("redirecting to " + redirectUrl);
+			System.out.println("Redirecting to " + redirectUrl);
 
-			BufferedImage bufferedImage = doGET(redirectUrl, t.getRequestURI().getQuery().toString());
+			BufferedImage bufferedImage = doGET(redirectUrl, t.getRequestURI().getQuery().toString()+
+					"&estimatedComplexity="+request.getEstimatedComplexity());
 			int imageSize = getBufferedImageSize(bufferedImage);
 
 			OutputStream os = t.getResponseBody();
@@ -98,12 +97,15 @@ public class LoadBalancer {
 	}
 
 	/**
-	 * Handle progress reports from worker instances
+	 * Handle progress reports from worker instances,
+	 * for example instance X is aproximately halfway done on request Y
+	 * also includes progress = 1 (request finished)
 	 */
 	static class RequestStatusHandler implements HttpHandler {
 
 		@Override
 		public void handle(final HttpExchange t) throws IOException {
+			System.out.println("RequestStatusHandler ran");
 			// Get the query.
 			final String query = t.getRequestURI().getQuery();
 			QueryParser queryParser = new QueryParser(query);
@@ -111,21 +113,32 @@ public class LoadBalancer {
 
 			InstanceManager instanceManager = new InstanceManager();
 			Instance instance = instanceManager.getInstanceById(queryParser.getInstanceId());
+			updateRequestById(request, instance);
 
 			if(request.getProgress() == 1){
-				// remove from runing requests
+				// remove from running requests
 				removeRequestById(request, instance);
 
 				MSSClient.getInstance().addMetrics(
+						request.getId(),
 						request.getSearchAlgorithm().toString(),
-						request.getStartingPoint().getX(),
-						request.getStartingPoint().getY(),
-						request.getMeasuredComplexity()
+						request.getDataset(),
+						request.getStartingPoint(),
+						request.getPoint0(),
+						request.getPoint1(),
+						Long.toString(request.getMeasuredComplexity())
 				);
-			}else{
-				// replace current request to have progress updated for loadbalancing decisions
-				updateRequestById(request, instance);
 			}
+
+			OutputStream os = t.getResponseBody();
+			final Headers hdrs = t.getResponseHeaders();
+			t.sendResponseHeaders(200, 0);
+			hdrs.add("Content-Type", "image/png");
+			hdrs.add("Access-Control-Allow-Origin", "*");
+			hdrs.add("Access-Control-Allow-Credentials", "true");
+			hdrs.add("Access-Control-Allow-Methods", "POST, GET, HEAD, OPTIONS");
+			hdrs.add("Access-Control-Allow-Headers", "Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
+			os.close();
 		}
 	}
 
@@ -138,7 +151,15 @@ public class LoadBalancer {
 		int curSum = 0;
 		Set<Instance> instances = instanceManager.getWorkerInstances();
 		for(Instance instance: instances){
+			
 			List<Request> requests = runningRequests.get(instance);
+		 	if(requests == null){
+				requests = new ArrayList<>();	
+				runningRequests.put(instance, requests);
+				continue;
+			}	
+
+			System.out.println("requests: " + requests);
 			// sum estimated time complexities of all requests
 			// any running request has estimated values, except 0 if no recent data exists
 			for(Request req : requests){
@@ -146,7 +167,6 @@ public class LoadBalancer {
 				// progress is a double value ranging from 0 to 1
 				curSum += (int) (req.getEstimatedComplexity() * (1-req.getProgress()));
 			}
-
 			if(curSum < lowestComplexity){
 				lowestComplexity = curSum;
 				selectedInstance = instance;
@@ -154,29 +174,38 @@ public class LoadBalancer {
 			curSum = 0;
 		}
 
+		if(selectedInstance == null){
+			return instances.iterator().next();
+		}
+
 		return selectedInstance;
 	}
 
 
-	public static int calculateComplexityEstimate(Request request){
-		// get metrics of similar requests and estimate complexity of this request
-		List<Request> recentRequests = new ArrayList<>();
-		String metrics = MSSClient.getInstance().getMetrics(request.getSearchAlgorithm());
-		// TODO test format of metrics and create a list of requests from them
-		// TODO requires aws instances
+	/**
+	 * Estimate the complexity that would be obtained after measuring the request execution with instrumentation
+	 * in a web server instance.
+	 */
+	public static long estimateComplexity(Request request){
+		// get metrics of similar requests with same search algo and dataset
+		List<Request> recentRequests = MSSClient.getInstance().getMetrics(request.getSearchAlgorithm(),
+				request.getDataset());
 
-
-		if(recentRequests.size() == 0) return 0;
-		int complexitySum = 0;
-		for(Request req : recentRequests){
-			complexitySum += req.getMeasuredComplexity();
+		if(recentRequests.size() != 0){
+			// get the request for this search algo and dataset where starting point is the closest to the
+			// starting point of the request currently being estimated.
+			int minDist = Integer.MAX_VALUE;
+			Request closestStartPointRequest = recentRequests.get(0);
+			for(Request req : recentRequests){
+				int dist = getDistanceBetweenPoints(request.getStartingPoint(), req.getStartingPoint());
+				if(dist < minDist){
+					closestStartPointRequest = req;
+					minDist = dist;
+				}
+			}
+			return closestStartPointRequest.getMeasuredComplexity();
 		}
-		// average out
-		return complexitySum / recentRequests.size();
-	}
-
-	private static List<Request> getSimilarRecentRequests(Request.SearchAlgorithm search, String dataset){
-		return null; // TODO
+		return 0;
 	}
 
 	private static void storeRequest(Request request, Instance instance){
@@ -193,8 +222,8 @@ public class LoadBalancer {
 		List<Request> requests = runningRequests.get(instance);
 		for(int i = 0; i < requests.size(); i++){
 			if(requests.get(i).getId() == request.getId()){
-				requests.remove(i);
-				requests.add(request);
+				requests.get(i).setProgress(request.getProgress());
+				requests.get(i).setMeasuredComplexity(request.getMeasuredComplexity());
 			}
 		}
 		runningRequests.remove(instance);
@@ -233,6 +262,13 @@ public class LoadBalancer {
 			e.printStackTrace();
 		}
 		return image;
+	}
+
+	private static int getDistanceBetweenPoints(Point a, Point b){
+		int xDiff = b.getX() - a.getX();
+		int yDiff = b.getY() - a.getY();
+
+		return (int) Math.sqrt(Math.pow(xDiff,2) + Math.pow(yDiff, 2));
 	}
 
 

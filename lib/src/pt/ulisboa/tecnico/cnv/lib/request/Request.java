@@ -6,6 +6,7 @@ package pt.ulisboa.tecnico.cnv.lib.request;
 public class Request {
     private int id;
     private SearchAlgorithm searchAlgorithm;
+    private String dataset;
     private Point startingPoint;
     private Point point0; // upper left
     private Point point1; // lower right
@@ -16,7 +17,7 @@ public class Request {
     private static int ID_COUNTER = 0;
 
     // defined by the loadbalancer as an estimate of the complexity of this request before execution
-    private int estimatedComplexity;
+    private long estimatedComplexity;
 
     // measured from executing the request through instrumentation
     private long measuredComplexity;
@@ -26,21 +27,26 @@ public class Request {
         ID_COUNTER++;
     }
 
-    public Request(SearchAlgorithm searchAlgorithm, Point startingPoint, Point point0, Point point1) {
+    public Request(SearchAlgorithm searchAlgorithm, String dataset, Point startingPoint, Point point0, Point point1) {
         this();
+        this.id = ID_COUNTER;
         this.searchAlgorithm = searchAlgorithm;
+        this.dataset = dataset;
         this.startingPoint = startingPoint;
         this.point0 = point0;
         this.point1 = point1;
     }
 
-    public Request(SearchAlgorithm searchAlgorithm, Point startingPoint, Point point0, Point point1, int estimatedComplexity) {
+    public Request(SearchAlgorithm searchAlgorithm, String dataset, Point startingPoint, Point point0, Point point1,
+                   long measuredComplexity) {
         this();
+        this.id = ID_COUNTER;
         this.searchAlgorithm = searchAlgorithm;
+        this.dataset = dataset;
         this.startingPoint = startingPoint;
         this.point0 = point0;
         this.point1 = point1;
-        this.estimatedComplexity = estimatedComplexity;
+        this.measuredComplexity = measuredComplexity;
     }
 
     public SearchAlgorithm getSearchAlgorithm() {
@@ -55,15 +61,19 @@ public class Request {
         return startingPoint;
     }
 
+    public String getDataset() {
+        return dataset;
+    }
+
     public void setStartingPoint(Point startingPoint) {
         this.startingPoint = startingPoint;
     }
 
-    public int getEstimatedComplexity() {
+    public long getEstimatedComplexity() {
         return estimatedComplexity;
     }
 
-    public void setEstimatedComplexity(int estimatedComplexity) {
+    public void setEstimatedComplexity(long estimatedComplexity) {
         this.estimatedComplexity = estimatedComplexity;
     }
 
