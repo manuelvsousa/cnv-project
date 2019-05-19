@@ -96,7 +96,9 @@ public class LoadBalancer {
 	}
 
 	/**
-	 * Handle progress reports from worker instances
+	 * Handle progress reports from worker instances,
+	 * for example instance X is aproximately halfway done on request Y
+	 * also includes progress = 1 (request finished)
 	 */
 	static class RequestStatusHandler implements HttpHandler {
 
@@ -138,9 +140,11 @@ public class LoadBalancer {
 		Set<Instance> instances = instanceManager.getWorkerInstances();
 		for(Instance instance: instances){
 			List<Request> requests = runningRequests.get(instance);
+
 			// sum estimated time complexities of all requests
 			// any running request has estimated values, except 0 if no recent data exists
 			for(Request req : requests){
+
 				// Sum estimated complexities taking also into account the progress of the request
 				// progress is a double value ranging from 0 to 1
 				curSum += (int) (req.getEstimatedComplexity() * (1-req.getProgress()));
@@ -157,6 +161,10 @@ public class LoadBalancer {
 	}
 
 
+	/**
+	 * Estimate the complexity that would be obtained after measuring the request execution with instrumentation
+	 * in a web server instance.
+	 */
 	public static long estimateComplexity(Request request){
 		// get metrics of similar requests with same search algo and dataset
 		List<Request> recentRequests = MSSClient.getInstance().getMetrics(request.getSearchAlgorithm(),
@@ -177,13 +185,6 @@ public class LoadBalancer {
 			return closestStartPointRequest.getMeasuredComplexity();
 		}
 		return 0;
-	}
-
-	private static int getDistanceBetweenPoints(Point a, Point b){
-		int xDiff = b.getX() - a.getX();
-		int yDiff = b.getY() - a.getY();
-
-		return (int) Math.sqrt(Math.pow(xDiff,2) + Math.pow(yDiff, 2));
 	}
 
 	private static void storeRequest(Request request, Instance instance){
@@ -240,6 +241,13 @@ public class LoadBalancer {
 			e.printStackTrace();
 		}
 		return image;
+	}
+
+	private static int getDistanceBetweenPoints(Point a, Point b){
+		int xDiff = b.getX() - a.getX();
+		int yDiff = b.getY() - a.getY();
+
+		return (int) Math.sqrt(Math.pow(xDiff,2) + Math.pow(yDiff, 2));
 	}
 
 

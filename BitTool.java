@@ -192,7 +192,7 @@ public class BitTool {
     public static synchronized void initProgressMarkers(String className){
         Request request = WebServerHandler.request.get();
         if(request.getEstimatedComplexity() != 0){
-            int progressStep = request.getEstimatedComplexity() / NUM_PROGRESS_MARKERS;
+            long progressStep = request.getEstimatedComplexity() / NUM_PROGRESS_MARKERS;
             long[] markers = progressMarkers.get();
             for(int i = 0; i < markers.length; i++){
                 markers[i] = i*progressStep;
