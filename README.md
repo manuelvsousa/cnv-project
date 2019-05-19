@@ -29,7 +29,7 @@ For example:
 
 ##### Running
 
-First run the MSS: {DEPRECATED 6}
+First run the MSS: {DEPRECATED 7}
 
 ```
 bash run_mss_server.sh <path_to_AWS_SDK_directory>
