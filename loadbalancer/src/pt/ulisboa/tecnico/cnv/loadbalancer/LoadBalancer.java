@@ -129,6 +129,16 @@ public class LoadBalancer {
 						Long.toString(request.getMeasuredComplexity())
 				);
 			}
+
+			OutputStream os = t.getResponseBody();
+			final Headers hdrs = t.getResponseHeaders();
+			t.sendResponseHeaders(200, 0);
+			hdrs.add("Content-Type", "image/png");
+			hdrs.add("Access-Control-Allow-Origin", "*");
+			hdrs.add("Access-Control-Allow-Credentials", "true");
+			hdrs.add("Access-Control-Allow-Methods", "POST, GET, HEAD, OPTIONS");
+			hdrs.add("Access-Control-Allow-Headers", "Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
+			os.close();
 		}
 	}
 

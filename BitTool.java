@@ -253,6 +253,8 @@ public class BitTool {
             dataOutputStream.writeBytes(urlParams);
             dataOutputStream.flush();
             dataOutputStream.close();
+
+            int responseCode = con.getResponseCode();
         }catch(MalformedURLException e){
             e.printStackTrace();
         }catch(IOException e){
