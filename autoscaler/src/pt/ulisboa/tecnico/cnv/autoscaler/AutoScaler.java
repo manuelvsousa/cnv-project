@@ -16,7 +16,7 @@ public class AutoScaler {
         Thread.sleep(90000);
         System.out.println("IN GRACE PERIOD " + asd.isInGracePeriod());
         asd.getCPUUsage();
-        asd.terminate();
+//        asd.terminate();
     }
 
 	public AutoScaler(){

@@ -27,7 +27,7 @@ public class VM {
     private AmazonCloudWatch cloudWatch;
     private String SECURITY_GROUP = "CVN-ssh+http";
     private String KEY_NAME = "mvs-aws";
-    private String AMI = "ami-0a79624df0814a698";
+    private String AMI = "ami-044d7baadc745ef2f";
     private String INSTANCE_TYPE = "t2.micro";
     private String id = new String();
     private Instance instance;
