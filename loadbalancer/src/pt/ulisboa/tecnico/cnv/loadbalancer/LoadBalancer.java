@@ -59,6 +59,9 @@ public class LoadBalancer {
 			long estimatedComplexity = estimateComplexity(request);
 			request.setEstimatedComplexity(estimatedComplexity);
 
+			Random random = new Random();
+			request.setId(random.nextInt());
+
 			// select an instance to send this request to and get it's ip
 			String ip = "";
 			if(isTestingLocally){
@@ -76,7 +79,7 @@ public class LoadBalancer {
 			System.out.println("Redirecting to " + redirectUrl);
 
 			BufferedImage bufferedImage = doGET(redirectUrl, t.getRequestURI().getQuery().toString()+
-					"&estimatedComplexity="+request.getEstimatedComplexity());
+					"&estimatedComplexity="+request.getEstimatedComplexity()+"&reqid="+request.getId());
 			int imageSize = getBufferedImageSize(bufferedImage);
 
 			OutputStream os = t.getResponseBody();

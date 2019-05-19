@@ -14,7 +14,6 @@ public class Request {
 
     private String query;
 
-    private static int ID_COUNTER = 0;
 
     // defined by the loadbalancer as an estimate of the complexity of this request before execution
     private long estimatedComplexity;
@@ -22,14 +21,7 @@ public class Request {
     // measured from executing the request through instrumentation
     private long measuredComplexity;
 
-    public Request(){
-        this.id = ID_COUNTER;
-        ID_COUNTER++;
-    }
-
     public Request(SearchAlgorithm searchAlgorithm, String dataset, Point startingPoint, Point point0, Point point1) {
-        this();
-        this.id = ID_COUNTER;
         this.searchAlgorithm = searchAlgorithm;
         this.dataset = dataset;
         this.startingPoint = startingPoint;
@@ -39,8 +31,6 @@ public class Request {
 
     public Request(SearchAlgorithm searchAlgorithm, String dataset, Point startingPoint, Point point0, Point point1,
                    long measuredComplexity) {
-        this();
-        this.id = ID_COUNTER;
         this.searchAlgorithm = searchAlgorithm;
         this.dataset = dataset;
         this.startingPoint = startingPoint;
