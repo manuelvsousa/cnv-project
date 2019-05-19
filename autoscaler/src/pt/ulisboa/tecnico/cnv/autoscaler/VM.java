@@ -23,6 +23,7 @@ public class VM {
 
     private String REGION = "us-east-1";
     private AmazonEC2 ec2Client;
+    private int GRACE_PERIOD = 120; // 2 minutes
     private AmazonCloudWatch cloudWatch;
     private String SECURITY_GROUP = "CVN-ssh+http";
     private String KEY_NAME = "mvs-aws";
@@ -31,6 +32,7 @@ public class VM {
     private String id = new String();
     private Instance instance;
     private String ENDPOINT_REQUEST_COUNT = "/countRequests";
+    private double startRunningAt;
 
 
     public VM(){
@@ -42,7 +44,7 @@ public class VM {
     }
 
 
-    private void init() throws Exception {
+    private void init() {
 
         /*
          * The ProfileCredentialsProvider will return your [default]
@@ -85,12 +87,12 @@ public class VM {
     }
 
     /*
-    0 : pending
-    16 : running
-    32 : shutting-down
-    48 : terminated
-    64 : stopping
-    80 : stopped
+        0 : pending
+        16 : running
+        32 : shutting-down
+        48 : terminated
+        64 : stopping
+        80 : stopped
      */
     private int getInstanceStatus(String instanceId) {
         DescribeInstancesRequest describeInstanceRequest = new DescribeInstancesRequest().withInstanceIds(instanceId);
@@ -125,6 +127,11 @@ public class VM {
         System.out.print("");
         this.instance = getInstance(this.getID());
         System.out.println("Instance: " + getDNS() + " Running!");
+        this.startRunningAt = (new Date().getTime()) / 1000.0; // in seconds
+    }
+
+    public boolean isInGracePeriod(){
+        return (this.startRunningAt + GRACE_PERIOD) >= ((new Date().getTime()) / 1000.0);
     }
 
     private int getWebServerRequests(){
@@ -146,7 +153,7 @@ public class VM {
 
 
     public Double getCPUUsage(){
-        long offsetInMilliseconds = 1000 * 60 * 10;
+        long offsetInMilliseconds = 1000 * 60 * 10; // 10 minutes
         Dimension instanceDimension = new Dimension();
         instanceDimension.setName("InstanceId");
         List<Dimension> dims = new ArrayList<>();
