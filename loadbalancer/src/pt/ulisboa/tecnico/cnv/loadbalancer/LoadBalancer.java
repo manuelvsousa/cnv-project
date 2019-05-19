@@ -17,7 +17,6 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.*;
 import java.util.concurrent.Executors;
 
@@ -58,7 +57,7 @@ public class LoadBalancer {
 		public void handle(final HttpExchange t) throws IOException {
 			// create request object
 			Request request = (new QueryParser(t.getRequestURI().getQuery())).getRequest();
-			int estimatedComplexity = calculateComplexityEstimate(request);
+			int estimatedComplexity = estimateComplexity(request);
 			request.setEstimatedComplexity(estimatedComplexity);
 
 			// select an instance to send this request to and get it's ip
@@ -72,14 +71,14 @@ public class LoadBalancer {
 
 				// store request in the hashmap for this instance
 				storeRequest(request, instance);
-				System.out.println("storing request");
 			}
 
 			//String ip = "localhost";
 			String redirectUrl = HttpUtil.buildUrl(ip, 8080);
-			System.out.println("redirecting to " + redirectUrl);
+			System.out.println("Redirecting to " + redirectUrl);
 
-			BufferedImage bufferedImage = doGET(redirectUrl, t.getRequestURI().getQuery().toString());
+			BufferedImage bufferedImage = doGET(redirectUrl, t.getRequestURI().getQuery().toString()+
+					"&estimatedComplexity="+request.getEstimatedComplexity());
 			int imageSize = getBufferedImageSize(bufferedImage);
 
 			OutputStream os = t.getResponseBody();
@@ -158,13 +157,13 @@ public class LoadBalancer {
 	}
 
 
-	public static int calculateComplexityEstimate(Request request){
+	public static int estimateComplexity(Request request){
 		// get metrics of similar requests and estimate complexity of this request
 		List<Request> recentRequests = new ArrayList<>();
 		String metrics = MSSClient.getInstance().getMetrics(request.getSearchAlgorithm());
+		System.out.println("Metrics from mss: " + metrics);
 		// TODO test format of metrics and create a list of requests from them
 		// TODO requires aws instances
-
 
 		if(recentRequests.size() == 0) return 0;
 		int complexitySum = 0;
@@ -175,7 +174,7 @@ public class LoadBalancer {
 		return complexitySum / recentRequests.size();
 	}
 
-	private static List<Request> getSimilarRecentRequests(Request.SearchAlgorithm search, String dataset){
+	private static List<Request> getSimilarRecentRequests(Request.SearchAlgorithm search){
 		return null; // TODO
 	}
 

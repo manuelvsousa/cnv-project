@@ -16,7 +16,7 @@ public class Request {
     private static int ID_COUNTER = 0;
 
     // defined by the loadbalancer as an estimate of the complexity of this request before execution
-    private int estimatedComplexity;
+    private long estimatedComplexity;
 
     // measured from executing the request through instrumentation
     private long measuredComplexity;
@@ -59,11 +59,11 @@ public class Request {
         this.startingPoint = startingPoint;
     }
 
-    public int getEstimatedComplexity() {
+    public long getEstimatedComplexity() {
         return estimatedComplexity;
     }
 
-    public void setEstimatedComplexity(int estimatedComplexity) {
+    public void setEstimatedComplexity(long estimatedComplexity) {
         this.estimatedComplexity = estimatedComplexity;
     }
 
