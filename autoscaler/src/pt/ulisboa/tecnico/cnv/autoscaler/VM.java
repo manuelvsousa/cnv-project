@@ -25,9 +25,9 @@ public class VM {
     private AmazonEC2 ec2Client;
     private int GRACE_PERIOD = 120; // 2 minutes
     private AmazonCloudWatch cloudWatch;
-    private String SECURITY_GROUP = "CVN-ssh+http";
-    private String KEY_NAME = "mvs-aws";
-    private String AMI = "ami-0ace972d0274aa00d";
+    private String SECURITY_GROUP = "ssh+http8000";
+    private String KEY_NAME = "CNV-GERAL";
+    private String AMI = "ami-0e6cc7624674ea76a";
     private String INSTANCE_TYPE = "t2.micro";
     private String id;
     private Instance instance;
