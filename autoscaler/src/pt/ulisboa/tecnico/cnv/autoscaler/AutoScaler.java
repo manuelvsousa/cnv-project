@@ -55,8 +55,8 @@ public class AutoScaler {
         int avg = 0;
         int doNotCountThese = 0;
         for(VM vm : instances){
-            if(vm.getLastRecordedCPU() >= 0){ //this is to account machines that are still in grace period. They wont take part in the math
-                avg += vm.getLastRecordedCPU(); // avg from the last 4 minutes of this machine
+            if(vm.getCPUUsage() >= 0){ //this is to account machines that are still in grace period. They wont take part in the math
+                avg += vm.getCPUUsage(); // avg from the last 4 minutes of this machine
                 if(avg < minL && !vm.isBusy()){
                     minL = avg;
                     lessLoad = vm;
@@ -103,6 +103,7 @@ public class AutoScaler {
     }
 
     public void launchInstance(){
+        System.out.println("Creating new machine....");
         VM vm = new VM();
         vm.launchVM();
         this.lastCoolDown = (new Date().getTime());

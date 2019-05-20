@@ -217,7 +217,7 @@ public class VM {
         return this.requestHistory;
     }
 
-    public double getLastRecordedCPU(){
+    public int getLastRecordedCPU(){
         if(this.cpuRecords.size() > 0){
             return this.cpuRecords.get(this.cpuRecords.size() - 1);
         }
