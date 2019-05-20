@@ -185,7 +185,10 @@ public class LoadBalancer {
 		}
 
 		if(selectedInstance == null){
-			return instances.iterator().next();
+            Iterator<Instance> it = instances.iterator();
+            if( it.hasNext() ){
+               selectedInstance = it.next();
+            } 
 		}
 		System.out.println("redirecting request to instance with id: " + selectedInstance.getInstanceId());
 		return selectedInstance;
