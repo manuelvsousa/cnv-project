@@ -29,16 +29,26 @@ public class VM {
     private String KEY_NAME = "mvs-aws";
     private String AMI = "ami-0ace972d0274aa00d";
     private String INSTANCE_TYPE = "t2.micro";
-    private String id = new String();
+    private String id;
     private Instance instance;
     private String ENDPOINT_REQUEST_COUNT = "/countRequests";
     private String ENDPOINT_HEALTH_CHECK = "/healthCheck";
+    private long OFFSET_MILLISECONDS = 1000 * 60 * 5; // 5 minutes
     private int WEBSERVER_PORT = 8080;
     private double startRunningAt;
+
+    private List<Boolean> healthRecords;
+    private List<Integer> cpuRecords;
+    private List<Integer> requestHistory;
+
 
 
     public VM(){
         try{
+            this.healthRecords = new ArrayList<>();
+            this.cpuRecords = new ArrayList<>();
+            this.requestHistory = new ArrayList<>();
+            this.id = new String();
             this.init();
         }catch (Exception e){
             e.printStackTrace();
@@ -111,6 +121,7 @@ public class VM {
                 .withMinCount(1)
                 .withMaxCount(1)
                 .withKeyName(this.KEY_NAME)
+                .withMonitoring(true)
                 .withSecurityGroups(this.SECURITY_GROUP);
 
         RunInstancesResult runInstancesResult =
@@ -124,9 +135,11 @@ public class VM {
             try {
                 Thread.sleep(5000);
                 System.out.print(".");
-            } catch(InterruptedException e) {}
+            } catch(InterruptedException e) {
+                e.printStackTrace();
+            }
         }
-        System.out.print("");
+        System.out.println();
         this.instance = getInstance(this.getID());
         System.out.println("Instance: " + getDNS() + " Running!");
 
@@ -134,9 +147,12 @@ public class VM {
             try {
                 Thread.sleep(3000);
                 System.out.print(".");
-            } catch(InterruptedException e) {}
+            } catch(InterruptedException e) {
+                e.printStackTrace();
+            }
         }
-        System.out.print("Web Server Started Running!!");
+        System.out.println();
+        System.out.println("Web Server Started Running!!");
         this.startRunningAt = (new Date().getTime()) / 1000.0; // in seconds
     }
 
@@ -145,8 +161,13 @@ public class VM {
     }
 
     private int getWebServerRequests(){
-        int runningMachines = Integer.parseInt(HTTPRequest.doGET("http://" + getDNS() + ENDPOINT_REQUEST_COUNT));
+        int runningMachines = Integer.parseInt(HTTPRequest.doGET(getURL(ENDPOINT_REQUEST_COUNT)));
         return runningMachines == -1 ? 0 : runningMachines;
+    }
+
+    private boolean isBusy(){
+        int runningMachines = Integer.parseInt(HTTPRequest.doGET(getURL(ENDPOINT_REQUEST_COUNT)));
+        return runningMachines == -1 ? false : runningMachines != 0;
     }
 
     private String getURL(String urlPath){
@@ -173,19 +194,61 @@ public class VM {
         return false;
     }
 
+    public void tick(){
+        this.healthRecords.add(isWebServerRunning());
+        System.out.println(getCPUUsage());
+        if (getCPUUsage() > 0){ //dangerous
+            this.cpuRecords.add(getCPUUsage());
+        }
+        this.requestHistory.add(this.getWebServerRequests());
+        this.dataCleaner();
+    }
 
-    public Double getCPUUsage(){
-        long offsetInMilliseconds = 1000 * 60 * 10; // 10 minutes
+
+    public List<Boolean> getHealthRecords(){
+        return this.healthRecords;
+    }
+
+    public List<Integer> getCPURecords(){
+        return this.cpuRecords;
+    }
+
+    public List<Integer> getRequestsHistory(){
+        return this.requestHistory;
+    }
+
+    public double getLastRecordedCPU(){
+        if(this.cpuRecords.size() > 0){
+            return this.cpuRecords.get(this.cpuRecords.size() - 1);
+        }
+        return -1;
+    }
+
+    private void dataCleaner(){
+        // yea we should be using queued lists
+        if(this.requestHistory.size() == 4){
+                this.requestHistory.remove(0);
+        }
+        if(this.healthRecords.size() ==  4){
+                this.healthRecords.remove(0);
+        }
+        if (this.cpuRecords.size() == 4){
+                this.cpuRecords.remove(0);
+        }
+    }
+
+
+    public int getCPUUsage(){
         Dimension instanceDimension = new Dimension();
         instanceDimension.setName("InstanceId");
         List<Dimension> dims = new ArrayList<>();
         dims.add(instanceDimension);
         String name = this.instance.getInstanceId();
+        int avg = 0;
         if (getInstanceStatus(getID()) == RUNNING) {
-            System.out.println("running instance id = " + name);
             instanceDimension.setValue(name);
             GetMetricStatisticsRequest request = new GetMetricStatisticsRequest()
-                    .withStartTime(new Date(new Date().getTime() - offsetInMilliseconds))
+                    .withStartTime(new Date(new Date().getTime() - OFFSET_MILLISECONDS))
                     .withNamespace("AWS/EC2")
                     .withPeriod(60)
                     .withMetricName("CPUUtilization")
@@ -195,12 +258,15 @@ public class VM {
             GetMetricStatisticsResult getMetricStatisticsResult =
                     cloudWatch.getMetricStatistics(request);
             List<Datapoint> datapoints = getMetricStatisticsResult.getDatapoints();
-            System.out.println(datapoints.toString());
+            System.out.println(datapoints);
             for (Datapoint dp : datapoints) {
-                return dp.getAverage();
+                avg += dp.getAverage();
+            }
+            if(datapoints.size() != 0){
+                return avg / datapoints.size();
             }
         }
-        return -1.0;
+        return -1;
     }
 
 }
