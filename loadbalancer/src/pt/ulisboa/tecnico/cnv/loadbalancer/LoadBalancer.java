@@ -152,32 +152,44 @@ public class LoadBalancer {
 	/**
 	 * Select the instance that we want to send the request to
 	 */
-	private static Instance selectInstanceForRequest(Request request){
+	private static synchronized Instance selectInstanceForRequest(Request request){
 		Instance selectedInstance = null;
 		long lowestComplexity = Long.MAX_VALUE;
 		long curSum = 0;
 		Set<Instance> instances = instanceManager.getWorkerInstances();
-		for(Instance instance: instances){
-			
+        System.out.println("Selecting an instance for request with estimated complexity = " + request.getEstimatedComplexity());
+		for(Instance instance: instances){  
+            System.out.println("Checking instance " + instance.getInstanceId() + " for loadbalancing");
+            // only proceed if instance is in "running" state 
+            if(instance.getState().getCode() != 16){
+                continue;
+            }
+            // does the instance have a request entry in the map? if not, add a new one
 			List<Request> requests = runningRequests.get(instance);
 		 	if(requests == null){
 				requests = new ArrayList<>();	
 				runningRequests.put(instance, requests);
-				continue;
 			}	
 
 			// sum estimated time complexities of all requests
 			// any running request has estimated values, except 0 if no recent data exists
+            System.out.println("instance : " + instance.getInstanceId() + " has " + requests.size() + " requests");
 			for(Request req : requests){
+                System.out.println("instance : " + instance.getInstanceId() + " has request: " + req);
 				// Sum estimated complexities taking also into account the progress of the request
 				// progress is a double value ranging from 0 to 1
 				double leftOverPercentage = 1-req.getProgress();
 				curSum += (long) (req.getEstimatedComplexity() * leftOverPercentage);
 				System.out.println("leftover: "+leftOverPercentage);
 				System.out.println("estimated: " + req.getEstimatedComplexity());
-				System.out.println("instanceid: " + instance.getInstanceId() + " , aproximate total complexity = " + curSum);
+				System.out.println("instance: " + instance.getInstanceId() + " , aproximate total complexity = " + curSum);
 			}
+
+            // pick the instance with the lowest estimated complexity
+            System.out.println("test: instanceid: "+ instance.getInstanceId() + " curSum=" + curSum + " < lowestComplexity ="+lowestComplexity);
+            
 			if(curSum < lowestComplexity){
+                System.out.println("instance : " + instance.getInstanceId() + " is temporarily selected as lowest with complexity " + curSum);
 				lowestComplexity = curSum;
 				selectedInstance = instance;
 			}
@@ -190,7 +202,10 @@ public class LoadBalancer {
                selectedInstance = it.next();
             } 
 		}
+
+        System.out.println("instance : " + selectedInstance.getInstanceId() + " has been selected with complexity: " + lowestComplexity);
 		System.out.println("redirecting request to instance with id: " + selectedInstance.getInstanceId());
+
 		return selectedInstance;
 	}
 
