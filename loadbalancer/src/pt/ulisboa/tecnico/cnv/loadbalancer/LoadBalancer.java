@@ -119,6 +119,7 @@ public class LoadBalancer {
 			updateRequestById(request, instance);
 
 			if(request.getProgress() == 1){
+				System.out.println("2");
 				// remove from running requests
 				removeRequestById(request, instance);
 				MSSClient.getInstance().addMetrics(
@@ -132,10 +133,12 @@ public class LoadBalancer {
 				);
 			}
 
+
+
 			final Headers hdrs = t.getResponseHeaders();
 			String response ="";
 			t.sendResponseHeaders(200, response.length());
-			hdrs.add("Content-Typpe", "text/html");
+			hdrs.add("Content-Typpe", "text/plain");
 			hdrs.add("Access-Control-Allow-Origin", "*");
 			hdrs.add("Access-Control-Allow-Credentials", "true");
 			hdrs.add("Access-Control-Allow-Methods", "POST, GET, HEAD, OPTIONS");

@@ -248,6 +248,8 @@ public class BitTool {
         String urlParams = request.getQuery()+"&reqid="+request.getId()+
                 "&instanceId="+WebServer.instanceId.substring(2)+"&progress="+request.getProgress()+"&measuredComplexity="+request.getMeasuredComplexity();
 		String urlStr = targetUrl +"?" + urlParams;
+		System.out.println("urlStr = " + urlStr);
+	
         try{
             URL url = new URL(urlStr);
 			System.out.println("URL: " +urlStr);

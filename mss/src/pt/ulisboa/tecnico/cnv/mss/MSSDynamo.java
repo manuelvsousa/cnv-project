@@ -40,8 +40,8 @@ public class MSSDynamo {
     }
 
     public void addItem(int id,String algorithm, String dataset, int startX, int startY, int x0, int y0, int x1, int y1, long timeComplexity) {
-        Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
-        item.put("id", new AttributeValue().withN(Integer.toString(id)));
+ 	Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
+        item.put("id", new AttributeValue().withS(Long.toString(id)));
         item.put("SearchAlgorithm", new AttributeValue(algorithm));
         item.put("Dataset", new AttributeValue(dataset));
         item.put("StartX", new AttributeValue().withN(Integer.toString(startX)));
@@ -52,7 +52,7 @@ public class MSSDynamo {
         item.put("Y1", new AttributeValue().withN(Integer.toString(y1)));
         item.put("TimeComplexity", new AttributeValue().withN(Long.toString(timeComplexity)));
         PutItemRequest putItemRequest = new PutItemRequest(TABLE_NAME, item);
-        dynamoDB.putItem(putItemRequest);
+       	dynamoDB.putItem(putItemRequest);
     }
 
     private void create() throws Exception {
