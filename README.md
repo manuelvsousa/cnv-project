@@ -47,6 +47,13 @@ Second, run the loadbalancer like so:
 bash run_loadbalancer.sh <path_to_AWS_SDK_directory>
 ```
 
+Third, run the autoscaler in a new terminal like so:
+
+```
+cd autoscaler/src
+java pt.ulisboa.tecnico.cnv.autoscaler.AutoScaler
+```
+
 
 ##### Testing locally
 
