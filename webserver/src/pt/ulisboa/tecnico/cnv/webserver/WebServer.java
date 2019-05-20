@@ -25,6 +25,7 @@ public class WebServer {
 		final HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
 		server.createContext("/climb", new WebServerHandler());
 		server.createContext("/countRequests", new WebServerRequestCountHandler());
+		server.createContext("/healthCheck", new WebServerHealthCheckHandler());
 
 		// be aware! infinite pool of threads!
 		server.setExecutor(Executors.newCachedThreadPool());
@@ -48,6 +49,19 @@ public class WebServer {
 		public void handle(HttpExchange t) throws IOException {
 			final Headers hdrs = t.getResponseHeaders();
 			String toSend = Integer.toString(requestCount);
+			t.sendResponseHeaders(200, toSend.length());
+			hdrs.add("Content-Type", "text/plain");
+			final OutputStream os = t.getResponseBody();
+			os.write(toSend.getBytes());
+			os.close();
+		}
+	}
+
+	static class WebServerHealthCheckHandler implements HttpHandler {
+		@Override
+		public void handle(HttpExchange t) throws IOException {
+			final Headers hdrs = t.getResponseHeaders();
+			String toSend = "I am alive!";
 			t.sendResponseHeaders(200, toSend.length());
 			hdrs.add("Content-Type", "text/plain");
 			final OutputStream os = t.getResponseBody();
