@@ -34,20 +34,14 @@ For example:
 
 ##### Running
 
-First run the MSS: {DEPRECATED 8}
-
-```
-bash run_mss_server.sh <path_to_AWS_SDK_directory>
-```
-
-Second, run one or more web servers, each in a separate ec2 instance by running the following command
+First, run one or more web servers, each in a separate ec2 instance by running the following command
 on each one:
 
 ```
 bash run_server.sh <path_to_AWS_SDK_directory>
 ```
 
-Third, run the loadbalancer like so:
+Second, run the loadbalancer like so:
 
 ```
 bash run_loadbalancer.sh <path_to_AWS_SDK_directory>
