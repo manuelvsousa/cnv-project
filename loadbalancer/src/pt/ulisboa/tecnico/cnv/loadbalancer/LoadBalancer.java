@@ -132,8 +132,6 @@ public class LoadBalancer {
 				);
 			}
 
-
-
 			final Headers hdrs = t.getResponseHeaders();
 			String response ="";
 			t.sendResponseHeaders(200, response.length());
@@ -192,10 +190,17 @@ public class LoadBalancer {
                 System.out.println("instance : " + instance.getInstanceId() + " is temporarily selected as lowest with complexity " + curSum);
 				lowestComplexity = curSum;
 				selectedInstance = instance;
-			}
+			}else if(curSum == lowestComplexity){
+				System.out.println("Same request complexity, choosing one with least # of requests running");
+				// choose the one with lowest # of requests running
+				int selectedInstanceRequestCount = runningRequests.get(selectedInstance).size();
+				int currInstanceRequestCount = runningRequests.get(instance).size();
+				selectedInstance = currInstanceRequestCount < selectedInstanceRequestCount ? instance : selectedInstance;
+			}	
 			curSum = 0;
 		}
 
+		// if all else fails
 		if(selectedInstance == null){
             Iterator<Instance> it = instances.iterator();
             if( it.hasNext() ){
@@ -216,8 +221,13 @@ public class LoadBalancer {
 	 */
 	public static long estimateComplexity(Request request){
 		// get metrics of similar requests with same search algo and dataset
-		List<Request> recentRequests = MSSClient.getInstance().getMetrics(request.getSearchAlgorithm(),
+		List<Request> recentRequests = new ArrayList<>();
+		try{
+			recentRequests = MSSClient.getInstance().getMetrics(request.getSearchAlgorithm(),
 				request.getDataset());
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 
 		if(recentRequests.size() != 0){
 			// get the request for this search algo and dataset where starting point is the closest to the
@@ -231,7 +241,7 @@ public class LoadBalancer {
 					minDist = dist;
 				}
 			}
-			return closestStartPointRequest.getMeasuredComplexity();
+			return closestStartPointRequest.getMeasuredComplexity();	
 		}
 		return 0;
 	}
