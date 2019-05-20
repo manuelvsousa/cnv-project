@@ -19,9 +19,10 @@ public class AutoScaler {
         as.launchInstance();
         while(true){
             System.out.println("----------------------------- NEW TICK ---------------------------");
-            System.out.println("------------------------------------------------------------------");
+            System.out.println("------------------------------------------------------------------\n");
             as.check();
-            System.out.println("------------------------------------------------------------------");
+            System.out.println("\n\n------------------------------------------------------------------");
+            System.out.println("------------------------------------------------------------------\n\n");
             Thread.sleep(30000);
         }
 //        asd.terminate();
@@ -41,7 +42,7 @@ public class AutoScaler {
         for(VM vm : instances){
             vm.tick();
             System.out.println("------------- MACHINE " + vm.getID() + "-------------");
-            System.out.println("Avg CPU in the last 5 minutes: " + (vm.getCPUUsage() == -1 ? "None" : vm.getCPUUsage() + "%"));
+            System.out.println("Avg CPU in the last 4 minutes: " + (vm.getCPUUsage() == -1 ? "None" : vm.getCPUUsage() + "%"));
             System.out.println("Health Records:" + vm.getHealthRecords());
             System.out.println("Requests History:" + vm.getRequestsHistory());
             System.out.println("-----------------------------------------------------");
@@ -54,8 +55,8 @@ public class AutoScaler {
         int avg = 0;
         int doNotCountThese = 0;
         for(VM vm : instances){
-            if(vm.getLastRecordedCPU() > 0){ //this is to account machines that are still in grace period. They wont take part in the math
-                avg += vm.getLastRecordedCPU(); // avg from the last 5 minutes of this machine
+            if(vm.getLastRecordedCPU() >= 0){ //this is to account machines that are still in grace period. They wont take part in the math
+                avg += vm.getLastRecordedCPU(); // avg from the last 4 minutes of this machine
                 if(avg < minL && !vm.isBusy()){
                     minL = avg;
                     lessLoad = vm;
@@ -70,10 +71,10 @@ public class AutoScaler {
         }
         avg = avg / numberOfInstancesWithMetrics;
         avgRecords.add(avg);
-        System.out.println("AVG CPU ON INSTANCES: " + avg + " .Taking part in calculation: " + numberOfInstancesWithMetrics + " machines\n\n");
+        System.out.println("AVG CPU ON INSTANCES: " + avg + "% .Taking part in calculation: " + numberOfInstancesWithMetrics + " machines\n\n");
 
         if(!coolDownOver()){
-            System.out.println("In cool down period. No changes will be made in the machines");
+            System.out.println("In cooldown period. No changes will be made in the machines");
             return;
         }
 
