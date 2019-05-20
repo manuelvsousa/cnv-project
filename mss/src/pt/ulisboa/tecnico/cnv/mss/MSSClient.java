@@ -35,7 +35,7 @@ public class MSSClient {
         return instance;
     }
 
-    public void addMetrics(int id, String algorithm, String dataset, Point start, Point upperLeft, Point lowerRight, String timeComplexity) {
+    public void addMetrics(long id, String algorithm, String dataset, Point start, Point upperLeft, Point lowerRight, String timeComplexity) {
         mssDynamo.addItem(id, algorithm, dataset, start.getX(), start.getY()
                 , upperLeft.getX(), upperLeft.getY(), lowerRight.getX(), lowerRight.getY(), Long.parseLong(timeComplexity));
     }
@@ -76,7 +76,7 @@ public class MSSClient {
                 new Point(Integer.parseInt(item.get("X0").getN()), Integer.parseInt(item.get("Y0").getN())),
                 new Point(Integer.parseInt(item.get("X1").getN()), Integer.parseInt(item.get("Y1").getN())),
                 Long.parseLong(item.get("TimeComplexity").getN()));
-        request.setId(Integer.parseInt(item.get("id").getN()));
+        request.setId(Long.parseLong(item.get("id").getS()));
         return request;
     }
 

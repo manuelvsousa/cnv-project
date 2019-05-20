@@ -119,7 +119,6 @@ public class LoadBalancer {
 			updateRequestById(request, instance);
 
 			if(request.getProgress() == 1){
-				System.out.println("2");
 				// remove from running requests
 				removeRequestById(request, instance);
 				MSSClient.getInstance().addMetrics(

@@ -4,7 +4,7 @@ package pt.ulisboa.tecnico.cnv.lib.request;
  * Represents a HillClimber request
  */
 public class Request {
-    private int id;
+    private long id;
     private SearchAlgorithm searchAlgorithm;
     private String dataset;
     private Point startingPoint;
@@ -71,11 +71,11 @@ public class Request {
         this.progress = progress;
     }
 
-    public void setId(int requestId) {
+    public void setId(long requestId) {
         this.id = requestId;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 

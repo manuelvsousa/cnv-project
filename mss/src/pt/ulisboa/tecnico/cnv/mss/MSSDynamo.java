@@ -39,7 +39,7 @@ public class MSSDynamo {
                 .build();
     }
 
-    public void addItem(int id,String algorithm, String dataset, int startX, int startY, int x0, int y0, int x1, int y1, long timeComplexity) {
+    public void addItem(long id,String algorithm, String dataset, int startX, int startY, int x0, int y0, int x1, int y1, long timeComplexity) {
  	Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
         item.put("id", new AttributeValue().withS(Long.toString(id)));
         item.put("SearchAlgorithm", new AttributeValue(algorithm));
