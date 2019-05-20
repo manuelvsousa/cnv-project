@@ -81,7 +81,7 @@ public class AutoScaler {
         if(avg > MAX_ALLOWED_CPU && !isDecreasing() && getNumberOfRunningInstances() < MAX_VMS){
             launchInstance();
         } else if(avg < MIN_ALLOWED_CPU && isDecreasing() && getNumberOfRunningInstances() > MIN_VMS){
-            if(!lessLoad.isBusy()){ //double check
+            if(lessLoad != null && !lessLoad.isBusy()){ //double check
                 this.instances.remove(lessLoad);
                 lessLoad.terminate();
             }
