@@ -25,15 +25,15 @@ public class VM {
     private AmazonEC2 ec2Client;
     private int GRACE_PERIOD = 120; // 2 minutes
     private AmazonCloudWatch cloudWatch;
-    private String SECURITY_GROUP = "ssh+http8000";
+    private String SECURITY_GROUP = "novosec";
     private String KEY_NAME = "CNV-GERAL";
-    private String AMI = "ami-0e6cc7624674ea76a";
+    private String AMI = "ami-0c8e1940bfeb0c094";
     private String INSTANCE_TYPE = "t2.micro";
     private String id;
     private Instance instance;
     private String ENDPOINT_REQUEST_COUNT = "/countRequests";
     private String ENDPOINT_HEALTH_CHECK = "/healthCheck";
-    private long OFFSET_MILLISECONDS = 1000 * 60 * 5; // 5 minutes
+    private long OFFSET_MILLISECONDS = 1000 * 60 * 4; // 5 minutes
     private int WEBSERVER_PORT = 8080;
     private double startRunningAt;
 
@@ -129,7 +129,7 @@ public class VM {
 
         this.id = runInstancesResult.getReservation().getInstances()
                 .get(0).getInstanceId();
-        System.out.println(this.id);
+        System.out.println("Machine ID: " + this.id);
 
         while(getInstanceStatus(getID()) != RUNNING){
             try {
@@ -165,7 +165,7 @@ public class VM {
         return runningMachines == -1 ? 0 : runningMachines;
     }
 
-    private boolean isBusy(){
+    public boolean isBusy(){
         int runningMachines = Integer.parseInt(HTTPRequest.doGET(getURL(ENDPOINT_REQUEST_COUNT)));
         return runningMachines == -1 ? false : runningMachines != 0;
     }
@@ -196,7 +196,7 @@ public class VM {
 
     public void tick(){
         this.healthRecords.add(isWebServerRunning());
-        System.out.println(getCPUUsage());
+//        System.out.println(getCPUUsage());
         if (getCPUUsage() > 0){ //dangerous
             this.cpuRecords.add(getCPUUsage());
         }
@@ -258,7 +258,7 @@ public class VM {
             GetMetricStatisticsResult getMetricStatisticsResult =
                     cloudWatch.getMetricStatistics(request);
             List<Datapoint> datapoints = getMetricStatisticsResult.getDatapoints();
-            System.out.println(datapoints);
+//            System.out.println(datapoints);
             for (Datapoint dp : datapoints) {
                 avg += dp.getAverage();
             }
