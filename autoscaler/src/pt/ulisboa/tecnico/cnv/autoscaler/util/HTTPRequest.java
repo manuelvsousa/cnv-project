@@ -20,7 +20,7 @@ public class HTTPRequest {
             rd.close();
             return result.toString();
         } catch (Exception e){
-            return "0";
+            return "-1";
         }
     }
 }

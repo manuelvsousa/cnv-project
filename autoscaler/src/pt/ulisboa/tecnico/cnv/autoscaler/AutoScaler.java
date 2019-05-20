@@ -7,6 +7,7 @@ public class AutoScaler {
     private int MAX_VMS = 40;
     private int MIN_VMS = 1;
     private int COOLDOWN_PERIOD = 180; // 3 minutes
+    private int lastCoolDown;
     private Map<String,VM> instances;
 
     public static void main(String[] args) throws  Exception{
@@ -21,15 +22,14 @@ public class AutoScaler {
 
 	public AutoScaler(){
         this.instances = new HashMap<>();
-
     }
 
 
     public void check(){
 
-        // Lets verify if we have machines that are doing nothing
+        // Verify what is the machine doing
         for(VM vm : instances.values()){
-
+//            vm.tick();
         }
 
     }

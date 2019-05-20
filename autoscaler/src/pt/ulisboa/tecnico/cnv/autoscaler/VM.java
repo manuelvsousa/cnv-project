@@ -27,11 +27,12 @@ public class VM {
     private AmazonCloudWatch cloudWatch;
     private String SECURITY_GROUP = "CVN-ssh+http";
     private String KEY_NAME = "mvs-aws";
-    private String AMI = "ami-0fce70e20bff2a9c4";
+    private String AMI = "ami-0fd89745e45ebcf15";
     private String INSTANCE_TYPE = "t2.micro";
     private String id = new String();
     private Instance instance;
     private String ENDPOINT_REQUEST_COUNT = "/countRequests";
+    private String ENDPOINT_HEALTH_CHECK = "/healthCheck";
     private double startRunningAt;
 
 
@@ -127,6 +128,14 @@ public class VM {
         System.out.print("");
         this.instance = getInstance(this.getID());
         System.out.println("Instance: " + getDNS() + " Running!");
+
+        while(!isWebServerRunning()){
+            try {
+                Thread.sleep(3000);
+                System.out.print(".");
+            } catch(InterruptedException e) {}
+        }
+        System.out.print("Web Server Started Running!!");
         this.startRunningAt = (new Date().getTime()) / 1000.0; // in seconds
     }
 
@@ -136,9 +145,17 @@ public class VM {
 
     private int getWebServerRequests(){
         int runningMachines = Integer.parseInt(HTTPRequest.doGET("http://" + getDNS() + "/" + ENDPOINT_REQUEST_COUNT));
-        return runningMachines;
+        return runningMachines == -1 ? 0 : runningMachines;
     }
 
+
+    private boolean isWebServerRunning(){
+        String status = HTTPRequest.doGET("http://" + getDNS() + "/" + ENDPOINT_HEALTH_CHECK) ;
+        if(status.equals("-1")){
+            return false;
+        }
+        return true;
+    }
 
     public boolean terminate(){
         if(getWebServerRequests() == 0) {
