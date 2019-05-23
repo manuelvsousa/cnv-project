@@ -27,7 +27,7 @@ public class VM {
     private AmazonCloudWatch cloudWatch;
     private String SECURITY_GROUP = "novosec";
     private String KEY_NAME = "CNV-GERAL";
-    private String AMI = "ami-0c8e1940bfeb0c094";
+    private String AMI = "ami-08952804cf076cf3b";
     private String INSTANCE_TYPE = "t2.micro";
     private String id;
     private Instance instance;

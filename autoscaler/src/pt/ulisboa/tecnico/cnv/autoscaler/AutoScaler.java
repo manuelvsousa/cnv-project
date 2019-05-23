@@ -5,7 +5,7 @@ import java.util.*;
 public class AutoScaler {
     private int MAX_VMS = 40;
     private int MIN_VMS = 1;
-    private int COOLDOWN_PERIOD = 120 * 1000; // 3 minutes
+    private int COOLDOWN_PERIOD = 120 * 1000; // 2 minutes
     private long lastCoolDown;
     private int MAX_ALLOWED_CPU = 70;
     private int MIN_ALLOWED_CPU = 40;
@@ -23,7 +23,7 @@ public class AutoScaler {
             as.check();
             System.out.println("\n\n------------------------------------------------------------------");
             System.out.println("------------------------------------------------------------------\n\n");
-            Thread.sleep(30000);
+            Thread.sleep(40000);
         }
 //        asd.terminate();
     }
@@ -81,7 +81,7 @@ public class AutoScaler {
         if(avg > MAX_ALLOWED_CPU && !isDecreasing() && getNumberOfRunningInstances() < MAX_VMS){
             launchInstance();
         } else if(avg < MIN_ALLOWED_CPU && isDecreasing() && getNumberOfRunningInstances() > MIN_VMS){
-            if(lessLoad != null && !lessLoad.isBusy()){ //double check
+            if(lessLoad != null && !lessLoad.isBusy()){
                 this.instances.remove(lessLoad);
                 lessLoad.terminate();
             }
